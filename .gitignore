@@ -1,0 +1,43 @@
+# ============================================================
+# FRONTEND — Next.js / Node
+# ============================================================
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/.env.local
+Frontend/.env.*.local
+Frontend/npm-debug.log*
+Frontend/yarn-debug.log*
+Frontend/yarn-error.log*
+Frontend/.pnpm-debug.log*
+
+# ============================================================
+# BACKEND — Laravel / PHP
+# ============================================================
+Backend/vendor/
+Backend/.env
+Backend/.env.backup
+Backend/storage/app/public/
+Backend/storage/logs/
+Backend/bootstrap/cache/
+Backend/*.key
+
+# ============================================================
+# SERVICIOS EXTRA (Python u otros)
+# ============================================================
+Services/**/__pycache__/
+Services/**/*.pyc
+Services/**/*.pyo
+Services/**/venv/
+Services/**/.venv/
+Services/**/.env
+
+# ============================================================
+# OS / EDITOR
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+*.swo
