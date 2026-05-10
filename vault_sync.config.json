@@ -22,7 +22,9 @@
       "Backend/composer.json",
       "Backend/config/**",
       "Backend/bootstrap/**",
-      "Backend/phpunit.xml"
+      "Backend/phpunit.xml",
+      ".gitignore",
+      ".gitattributes"
     ],
     "H4_contracts": [
       "Backend/database/migrations/**",
@@ -34,6 +36,8 @@
       "Backend/app/Http/Requests/**",
       "Backend/app/Policies/**",
       "Frontend/components/ui/**",
+      "Frontend/components/layout/**",
+      "Frontend/components/custom/**",
       "Frontend/app/api/**",
       "Frontend/lib/**",
       "Frontend/hooks/**",

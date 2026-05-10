@@ -186,21 +186,22 @@ def cmd_facts(silent: bool = False) -> int:
     _ensure_dirs()
     facts = assemble_facts(PROJECT_ROOT)
 
-    # Import graph for changed/affected files (lightweight: only Frontend ui + lib + hooks)
+    # Import graph for all Frontend source dirs (components, lib, hooks, app)
     fe = PROJECT_ROOT / "Frontend"
     if fe.exists():
         graph = {}
-        for sub in ["components/ui", "lib", "hooks", "app"]:
+        for sub in ["components", "lib", "hooks", "app"]:
             sub_dir = fe / sub
-            if sub_dir.exists():
-                for p in sub_dir.rglob("*.tsx"):
-                    rel = p.relative_to(PROJECT_ROOT).as_posix()
-                    graph[rel] = extract_imports(p)
-                for p in sub_dir.rglob("*.ts"):
-                    if p.name.endswith(".d.ts"):
-                        continue
-                    rel = p.relative_to(PROJECT_ROOT).as_posix()
-                    graph[rel] = extract_imports(p)
+            if not sub_dir.exists():
+                continue
+            for p in sub_dir.rglob("*.tsx"):
+                rel = p.relative_to(PROJECT_ROOT).as_posix()
+                graph[rel] = extract_imports(p)
+            for p in sub_dir.rglob("*.ts"):
+                if p.name.endswith(".d.ts"):
+                    continue
+                rel = p.relative_to(PROJECT_ROOT).as_posix()
+                graph[rel] = extract_imports(p)
         facts["import_graph"] = graph
         facts["import_graph_size"] = len(graph)
 

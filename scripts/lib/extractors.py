@@ -290,11 +290,28 @@ def assemble_facts(project_root: Path) -> dict:
             "tsconfig_aliases": parse_tsconfig_paths(fe / "tsconfig.json"),
             "theme": parse_globals_css(fe / "app" / "globals.css"),
             "ui_primitives": list_ui_primitives(fe / "components" / "ui"),
+            "layout_components": list_ui_primitives(fe / "components" / "layout"),
+            "custom_components": list_ui_primitives(fe / "components" / "custom"),
             "hooks": list_hooks(fe / "hooks"),
             "lib_utilities": list_lib_utilities(fe / "lib"),
             "package": parse_package_json(fe / "package.json"),
         })
         facts["frontend"]["ui_primitive_count"] = len(facts["frontend"]["ui_primitives"])
+
+        # Page routes (App Router)
+        app_dir = fe / "app"
+        if app_dir.exists():
+            pages = []
+            for p in app_dir.rglob("page.tsx"):
+                rel = p.relative_to(app_dir).as_posix()
+                # Extract route from path (strip /page.tsx and route groups)
+                route = "/" + rel.replace("/page.tsx", "").replace("page.tsx", "")
+                # Strip route groups (anything in parens)
+                import re as _re
+                route = _re.sub(r"\(([^)]+)\)/?", "", route)
+                route = route.rstrip("/") or "/"
+                pages.append({"file": rel, "route": route})
+            facts["frontend"]["pages"] = sorted(pages, key=lambda x: x["route"])
 
     if be.exists():
         facts["backend"].update({
