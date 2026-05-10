@@ -1,7 +1,8 @@
 """vault_sync — deterministic engine for keeping the Obsidian vault in sync with the repo.
 
 Subcommands:
-  report      Generate change_report.json from the latest commit's diff.
+  report      Generate change_report.json AND facts.json from the latest commit.
+  facts       Regenerate only facts.json (semantic snapshot of the repo).
   validate    Validate an existing change_report.json against the schema.
   check       Run structural consistency checks across layers.
   apply       Apply approved changes (changes.json) to the vault, idempotent + append-only.
@@ -9,6 +10,7 @@ Subcommands:
 
 Usage:
   python scripts/vault_sync.py report
+  python scripts/vault_sync.py facts
   python scripts/vault_sync.py validate change_report.json
   python scripts/vault_sync.py check
   python scripts/vault_sync.py apply changes.json
@@ -35,10 +37,12 @@ from lib.hierarchy import detect_layer, is_excluded
 from lib.schema import validate_report, SCHEMA_VERSION
 from lib.consistency import check_env_references, check_vault_code_paths
 from lib.vault import list_notes, parse_frontmatter, is_protected
+from lib.extractors import assemble_facts, build_import_graph, extract_imports
 
 
 PROJECT_ROOT = Path(__file__).parent.parent
 REPORT_PATH = PROJECT_ROOT / ".vault-sync" / "change_report.json"
+FACTS_PATH = PROJECT_ROOT / ".vault-sync" / "facts.json"
 LOG_PATH = PROJECT_ROOT / ".vault-sync" / "sync.log"
 
 
@@ -165,6 +169,52 @@ def cmd_report() -> int:
     _log(f"OK: change_report.json written ({len(items)} files, size={report['scope']['size']})")
     if structural["failed"]:
         _log(f"WARN: {len(structural['failed'])} consistency failures present in report")
+
+    # Always regenerate facts.json after a report
+    cmd_facts(silent=True)
+    return 0
+
+
+def cmd_facts(silent: bool = False) -> int:
+    """Generate .vault-sync/facts.json — semantic snapshot of the repo.
+
+    Captures: shadcn config, path aliases, theme tokens, UI primitives, hooks,
+    lib utilities, package deps, Laravel models/migrations/routes, import graph
+    of changed UI components.
+    """
+    cfg = load_config(PROJECT_ROOT)
+    _ensure_dirs()
+    facts = assemble_facts(PROJECT_ROOT)
+
+    # Import graph for changed/affected files (lightweight: only Frontend ui + lib + hooks)
+    fe = PROJECT_ROOT / "Frontend"
+    if fe.exists():
+        graph = {}
+        for sub in ["components/ui", "lib", "hooks", "app"]:
+            sub_dir = fe / sub
+            if sub_dir.exists():
+                for p in sub_dir.rglob("*.tsx"):
+                    rel = p.relative_to(PROJECT_ROOT).as_posix()
+                    graph[rel] = extract_imports(p)
+                for p in sub_dir.rglob("*.ts"):
+                    if p.name.endswith(".d.ts"):
+                        continue
+                    rel = p.relative_to(PROJECT_ROOT).as_posix()
+                    graph[rel] = extract_imports(p)
+        facts["import_graph"] = graph
+        facts["import_graph_size"] = len(graph)
+
+    facts["schema_version"] = "1.0"
+    facts["generated_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    facts["project_name"] = cfg.project_name
+
+    FACTS_PATH.write_text(json.dumps(facts, indent=2, ensure_ascii=False), encoding="utf-8")
+    if not silent:
+        _log(f"OK: facts.json written")
+        if facts.get("frontend", {}).get("ui_primitives"):
+            _log(f"  frontend ui primitives: {len(facts['frontend']['ui_primitives'])}")
+        if facts.get("backend", {}).get("models"):
+            _log(f"  backend models: {len(facts['backend']['models'])}")
     return 0
 
 
@@ -341,8 +391,23 @@ def cmd_status() -> int:
         report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
         print(f"\nLast report: {report['generated_at']}  ({report['scope']['size']}, {report['scope']['total_files']} files)")
         print(f"  commit: {report['commit']['id'][:8]} — {report['commit']['message'].splitlines()[0]}")
+        layers = report['scope']['by_layer']
+        print(f"  layers: " + ", ".join(f"{k.split('_')[0]}={v}" for k, v in layers.items() if v))
     else:
         print("\nNo change_report.json yet. Run: python scripts/vault_sync.py report")
+    if FACTS_PATH.exists():
+        facts = json.loads(FACTS_PATH.read_text(encoding="utf-8"))
+        fe = facts.get("frontend", {})
+        be = facts.get("backend", {})
+        print(f"\nFacts: {facts.get('generated_at', '?')}")
+        if fe.get("exists"):
+            print(f"  frontend: {len(fe.get('ui_primitives', []))} UI primitives, "
+                  f"{len(fe.get('hooks', []))} hooks, "
+                  f"{fe.get('theme', {}).get('theme_token_count', 0)} theme tokens")
+        if be.get("exists"):
+            print(f"  backend: {len(be.get('models', []))} models, "
+                  f"{len(be.get('migrations', []))} migrations, "
+                  f"{len(be.get('controllers', []))} controllers")
     return 0
 
 
@@ -353,6 +418,8 @@ def main(argv: list[str]) -> int:
     cmd = argv[1]
     if cmd == "report":
         return cmd_report()
+    if cmd == "facts":
+        return cmd_facts()
     if cmd == "validate":
         if len(argv) < 3:
             print("usage: vault_sync.py validate <file>")
