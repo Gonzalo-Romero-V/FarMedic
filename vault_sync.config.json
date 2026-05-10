@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "project_name": "FarMedic",
+  "vault_path": "C:/Users/Gonzalo/Dev/__databases/__farmedic__db__backup/FarMedic",
+  "hierarchy_mapping": {
+    "H1_intent": [
+      "vault/intent/**"
+    ],
+    "H2_requirements": [
+      "vault/domain/**",
+      "vault/raw/**"
+    ],
+    "H3_architecture": [
+      "vault/decisions/**"
+    ],
+    "H4_contracts": [
+      "Backend/database/migrations/**",
+      "Backend/routes/**",
+      "Backend/app/Models/**",
+      "Backend/app/Http/Resources/**",
+      "Frontend/app/api/**",
+      "Frontend/types/**"
+    ],
+    "H5_implementation": [
+      "Backend/app/Http/Controllers/**",
+      "Backend/app/Services/**",
+      "Backend/app/Policies/**",
+      "Frontend/app/**",
+      "Frontend/components/**",
+      "Frontend/lib/**"
+    ],
+    "ENV_references": [
+      "**/.env",
+      "**/.env.example",
+      "**/.env.local"
+    ]
+  },
+  "exclude_patterns": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/.next/**",
+    "**/storage/**",
+    "**/bootstrap/cache/**",
+    "**/*.lock",
+    "**/*-lock.json",
+    "**/*.log"
+  ],
+  "env_scan_scope": {
+    "Backend": ["app/**", "routes/**", "database/**"],
+    "Frontend": ["app/**", "components/**", "lib/**", "src/**"]
+  },
+  "vault_protected_status": ["locked"],
+  "report_size_limits": {
+    "max_files": 100,
+    "max_diff_chars_per_file": 500,
+    "split_threshold_files": 30
+  }
+}
