@@ -36,6 +36,7 @@ Services/**/.env
 # CLAUDE CODE
 # ============================================================
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # ============================================================
 # VAULT SYNC (reportes y logs locales, no versionados)
