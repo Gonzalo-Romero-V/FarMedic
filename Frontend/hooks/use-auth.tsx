@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface User {
   id: number
@@ -48,10 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser)
     localStorage.setItem("auth_token", newToken)
     localStorage.setItem("auth_user", JSON.stringify(newUser))
+
+    // Evitar múltiples notificaciones seguidas (debouncing simple por tiempo)
+    const lastToast = (window as any)._last_auth_toast || 0
+    if (Date.now() - lastToast > 2000) {
+      toast.success(`Bienvenido, ${newUser.nombre}`)
+      ;(window as any)._last_auth_toast = Date.now()
+    }
   }
 
   const logout = async () => {
-    // Intentar avisar al backend (opcional, pero recomendado)
     if (token) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {

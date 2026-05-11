@@ -77,7 +77,6 @@ export default function AuthPage() {
       }
 
       login(data.token, data.user)
-      toast.success(mode === "login" ? `Bienvenido, ${data.user.nombre}` : "Cuenta creada con éxito")
       router.push("/dashboard")
     } catch (error: any) {
       toast.error(error.message || "Ocurrió un error")

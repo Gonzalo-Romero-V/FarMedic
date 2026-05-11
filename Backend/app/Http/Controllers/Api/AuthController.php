@@ -108,39 +108,47 @@ class AuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Throwable $e) {
+            \Log::error('Google OAuth user extraction failed: ' . $e->getMessage());
             return redirect(config('services.frontend.url') . '/auth/callback?error=oauth_failed');
         }
 
-        $rolCliente = Rol::where('nombre', 'cliente')->firstOrFail();
+        try {
+            $rolCliente = Rol::where('nombre', 'cliente')->firstOrFail();
 
-        // Estrategia: matchear por google_oauth_id primero, luego por email.
-        // - Si existe usuario interno con ese email, se le agrega google_oauth_id (puede loguearse con Google).
-        // - Si no existe, se crea como cliente.
-        $usuario = Usuario::where('google_oauth_id', $googleUser->getId())->first();
+            // Estrategia: matchear por google_oauth_id primero, luego por email.
+            $usuario = Usuario::where('google_oauth_id', $googleUser->getId())->first();
 
-        if (! $usuario) {
-            $usuario = Usuario::where('email', $googleUser->getEmail())->first();
-            if ($usuario) {
-                $usuario->update(['google_oauth_id' => $googleUser->getId()]);
-            } else {
-                $usuario = Usuario::create([
-                    'rol_id' => $rolCliente->id,
-                    'sucursal_id' => null,
-                    'nombre' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'Usuario Google',
-                    'email' => $googleUser->getEmail(),
-                    'password' => Hash::make(Str::random(40)),
-                    'google_oauth_id' => $googleUser->getId(),
-                    'activo' => true,
-                ]);
+            if (! $usuario) {
+                $usuario = Usuario::where('email', $googleUser->getEmail())->first();
+                if ($usuario) {
+                    $usuario->update(['google_oauth_id' => $googleUser->getId()]);
+                } else {
+                    $usuario = Usuario::create([
+                        'rol_id' => $rolCliente->id,
+                        'sucursal_id' => null,
+                        'nombre' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'Usuario Google',
+                        'email' => $googleUser->getEmail(),
+                        'password' => Hash::make(Str::random(40)),
+                        'google_oauth_id' => $googleUser->getId(),
+                        'activo' => true,
+                    ]);
+                }
             }
+
+            if (! $usuario->activo) {
+                return redirect(config('services.frontend.url') . '/auth/callback?error=usuario_inactivo');
+            }
+
+            $token = $usuario->createToken('google-oauth')->plainTextToken;
+
+            return redirect(config('services.frontend.url') . '/auth/callback?token=' . urlencode($token));
+
+        } catch (\Throwable $e) {
+            \Log::error('Google OAuth callback internal error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'google_user_email' => $googleUser->getEmail() ?? 'unknown'
+            ]);
+            return redirect(config('services.frontend.url') . '/auth/callback?error=internal_error');
         }
-
-        if (! $usuario->activo) {
-            return redirect(config('services.frontend.url') . '/auth/callback?error=usuario_inactivo');
-        }
-
-        $token = $usuario->createToken('google-oauth')->plainTextToken;
-
-        return redirect(config('services.frontend.url') . '/auth/callback?token=' . urlencode($token));
     }
 }

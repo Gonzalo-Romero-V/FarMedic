@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ============== PÚBLICAS ==============
+Route::get('auth/login', fn () => response()->json(['message' => 'No autenticado'], 401))->name('login');
 Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/register/cliente', [AuthController::class, 'registerCliente']);
 

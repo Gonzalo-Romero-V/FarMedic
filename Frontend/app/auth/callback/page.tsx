@@ -15,7 +15,12 @@ function CallbackContent() {
     const error = searchParams.get("error")
 
     if (error) {
-      toast.error(error === "oauth_failed" ? "Error al autenticar con Google" : "Usuario inactivo")
+      const messages: Record<string, string> = {
+        oauth_failed: "Error al autenticar con Google",
+        usuario_inactivo: "Usuario inactivo",
+        internal_error: "Error interno en el servidor",
+      }
+      toast.error(messages[error] || "Ocurrió un error inesperado")
       router.push("/login")
       return
     }
@@ -34,7 +39,6 @@ function CallbackContent() {
 
           const user = await response.json()
           login(token, user)
-          toast.success(`Bienvenido, ${user.nombre}`)
           router.push("/dashboard")
         } catch (err) {
           console.error(err)
