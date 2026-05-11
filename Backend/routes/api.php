@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\FarmaciaController;
 use App\Http\Controllers\Api\LoteController;
@@ -15,40 +16,108 @@ use App\Http\Controllers\Api\VentaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// --- Auth helper ---
-Route::get('/user', fn (Request $r) => $r->user())->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| API Routes — protección por capas
+|--------------------------------------------------------------------------
+| Públicas: catálogo de lectura (RF-09), roles, auth.
+| auth:sanctum: requiere Bearer token válido.
+| role:admin / role:admin,empleado: además del token, exige rol específico.
+| Matriz completa: vault/decisions/api-contracts.md
+*/
 
-// --- Roles (readonly) ---
+// ============== PÚBLICAS ==============
+Route::post('auth/login', [AuthController::class, 'login']);
+Route::post('auth/register/cliente', [AuthController::class, 'registerCliente']);
+
 Route::get('roles', [RolController::class, 'index']);
-
-// --- Farmacia (singleton) ---
 Route::get('farmacia', [FarmaciaController::class, 'show']);
-Route::put('farmacia/{farmacia}', [FarmaciaController::class, 'update']);
 
-// --- Catálogo ---
-Route::apiResource('sucursales', SucursalController::class)->parameters(['sucursales' => 'sucursal']);
-Route::apiResource('usuarios', UsuarioController::class);
-Route::apiResource('categorias', CategoriaController::class);
+Route::get('sucursales', [SucursalController::class, 'index']);
+Route::get('categorias', [CategoriaController::class, 'index']);
+Route::get('categorias/{categoria}', [CategoriaController::class, 'show']);
+Route::get('medicamentos', [MedicamentoController::class, 'index']);
+Route::get('medicamentos/{medicamento}', [MedicamentoController::class, 'show']);
 
-Route::apiResource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
-Route::post('proveedores/{id}/restore', [ProveedorController::class, 'restore']);
+// ============== REQUIERE TOKEN (cualquier rol activo) ==============
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $r) => $r->user()->load('rol', 'sucursal'));
+    Route::get('auth/me', [AuthController::class, 'me']);
+    Route::post('auth/logout', [AuthController::class, 'logout']);
 
-Route::apiResource('medicamentos', MedicamentoController::class);
-Route::post('medicamentos/{id}/restore', [MedicamentoController::class, 'restore']);
+    Route::get('sucursales/{sucursal}', [SucursalController::class, 'show']);
 
-// --- Inventario y Kardex ---
-Route::apiResource('lotes', LoteController::class);
-Route::get('movimientos-stock', [MovimientoStockController::class, 'index']);
-Route::get('movimientos-stock/{movimientoStock}', [MovimientoStockController::class, 'show']);
-Route::post('movimientos-stock', [MovimientoStockController::class, 'store']);
+    // Recetas: cualquier autenticado puede subirla (cliente para su pedido, empleado para POS)
+    Route::post('recetas', [RecetaController::class, 'store']);
+    Route::get('recetas/{receta}', [RecetaController::class, 'show']);
 
-// --- Recetas ---
-Route::post('recetas', [RecetaController::class, 'store']);
-Route::get('recetas/{receta}', [RecetaController::class, 'show']);
+    // Pedidos: lista/show con filtrado por rol en controller; cliente solo crea sus pedidos
+    Route::get('pedidos', [PedidoController::class, 'index']);
+    Route::get('pedidos/{pedido}', [PedidoController::class, 'show']);
+    Route::post('pedidos', [PedidoController::class, 'store']);
 
-// --- Operaciones ---
-Route::apiResource('ventas', VentaController::class)->only(['index', 'show', 'store']);
-Route::post('ventas/{venta}/anular', [VentaController::class, 'anular']);
+    // Usuario: show de sí mismo + update (admin o self — refinar con policy)
+    Route::get('usuarios/{usuario}', [UsuarioController::class, 'show']);
+    Route::put('usuarios/{usuario}', [UsuarioController::class, 'update']);
+});
 
-Route::apiResource('pedidos', PedidoController::class)->only(['index', 'show', 'store']);
-Route::patch('pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado']);
+// ============== ADMIN + EMPLEADO ==============
+Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(function () {
+    // Inventario y Kardex
+    Route::get('lotes', [LoteController::class, 'index']);
+    Route::get('lotes/{lote}', [LoteController::class, 'show']);
+    Route::post('lotes', [LoteController::class, 'store']);
+    Route::put('lotes/{lote}', [LoteController::class, 'update']);
+
+    Route::get('movimientos-stock', [MovimientoStockController::class, 'index']);
+    Route::get('movimientos-stock/{movimientoStock}', [MovimientoStockController::class, 'show']);
+    Route::post('movimientos-stock', [MovimientoStockController::class, 'store']);
+
+    // POS — Ventas (alta y consulta)
+    Route::get('ventas', [VentaController::class, 'index']);
+    Route::get('ventas/{venta}', [VentaController::class, 'show']);
+    Route::post('ventas', [VentaController::class, 'store']);
+
+    // Pedidos — gestión de estado
+    Route::patch('pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado']);
+
+    // Proveedores — lectura
+    Route::get('proveedores', [ProveedorController::class, 'index']);
+    Route::get('proveedores/{proveedor}', [ProveedorController::class, 'show']);
+});
+
+// ============== ADMIN ONLY ==============
+Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
+    // Farmacia (config global)
+    Route::put('farmacia/{farmacia}', [FarmaciaController::class, 'update']);
+
+    // Sucursales (escritura)
+    Route::post('sucursales', [SucursalController::class, 'store']);
+    Route::put('sucursales/{sucursal}', [SucursalController::class, 'update']);
+    Route::delete('sucursales/{sucursal}', [SucursalController::class, 'destroy']);
+
+    // Usuarios (gestión: listar, crear empleados/admins, desactivar)
+    Route::get('usuarios', [UsuarioController::class, 'index']);
+    Route::post('usuarios', [UsuarioController::class, 'store']);
+    Route::delete('usuarios/{usuario}', [UsuarioController::class, 'destroy']);
+
+    // Categorías (escritura)
+    Route::post('categorias', [CategoriaController::class, 'store']);
+    Route::put('categorias/{categoria}', [CategoriaController::class, 'update']);
+    Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy']);
+
+    // Proveedores (escritura + restore)
+    Route::post('proveedores', [ProveedorController::class, 'store']);
+    Route::put('proveedores/{proveedor}', [ProveedorController::class, 'update']);
+    Route::delete('proveedores/{proveedor}', [ProveedorController::class, 'destroy']);
+    Route::post('proveedores/{id}/restore', [ProveedorController::class, 'restore']);
+
+    // Medicamentos (escritura + restore — precio RNF-03 solo admin)
+    Route::post('medicamentos', [MedicamentoController::class, 'store']);
+    Route::put('medicamentos/{medicamento}', [MedicamentoController::class, 'update']);
+    Route::delete('medicamentos/{medicamento}', [MedicamentoController::class, 'destroy']);
+    Route::post('medicamentos/{id}/restore', [MedicamentoController::class, 'restore']);
+
+    // Anular venta (solo admin)
+    Route::post('ventas/{venta}/anular', [VentaController::class, 'anular']);
+});
