@@ -70,7 +70,7 @@ class Usuario extends Authenticatable
         return $this->hasMany(MovimientoStock::class, 'usuario_id');
     }
 
-    // Helpers de rol
+    // Helpers de rol (instancia)
     public function esAdministrador(): bool
     {
         return $this->rol?->nombre === 'administrador';
@@ -84,5 +84,26 @@ class Usuario extends Authenticatable
     public function esCliente(): bool
     {
         return $this->rol?->nombre === 'cliente';
+    }
+
+    // Scopes para filtrar por rol (query)
+    public function scopeClientes($query)
+    {
+        return $query->whereHas('rol', fn ($q) => $q->where('nombre', 'cliente'));
+    }
+
+    public function scopeEmpleados($query)
+    {
+        return $query->whereHas('rol', fn ($q) => $q->where('nombre', 'empleado'));
+    }
+
+    public function scopeAdministradores($query)
+    {
+        return $query->whereHas('rol', fn ($q) => $q->where('nombre', 'administrador'));
+    }
+
+    public function scopeInternos($query)
+    {
+        return $query->whereHas('rol', fn ($q) => $q->whereIn('nombre', ['administrador', 'empleado']));
     }
 }
