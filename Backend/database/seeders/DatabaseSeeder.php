@@ -2,24 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seeds esenciales (fijos del sistema). Datos transaccionales se agregan luego.
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        DB::table('roles')->upsert([
+            ['id' => 1, 'nombre' => 'administrador', 'descripcion' => 'Acceso total al sistema', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'nombre' => 'empleado',      'descripcion' => 'POS, gestión de pedidos e inventario limitado', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 3, 'nombre' => 'cliente',       'descripcion' => 'Catálogo y pedidos online propios', 'created_at' => now(), 'updated_at' => now()],
+        ], ['id'], ['nombre', 'descripcion', 'updated_at']);
     }
 }
