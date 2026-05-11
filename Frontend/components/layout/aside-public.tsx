@@ -9,7 +9,7 @@ import { DarkLightToggle } from "@/components/custom/dark-light-toggle"
 export const publicNavLinks = [
   { href: "/", label: "Inicio" },
   { href: "/tutorial", label: "Tutorial" },
-  { href: "/about", label: "Sobre nosotros" },
+  { href: "/about-us", label: "Sobre nosotros" },
 ]
 
 export function AsidePublic() {

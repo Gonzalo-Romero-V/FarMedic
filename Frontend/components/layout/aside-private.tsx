@@ -8,10 +8,9 @@ import { DarkLightToggle } from "@/components/custom/dark-light-toggle"
 
 export const privateNavLinks = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/inventario", label: "Inventario" },
-  { href: "/pos", label: "POS" },
-  { href: "/pedidos", label: "Pedidos" },
-  { href: "/reportes", label: "Reportes" },
+  { href: "/kardex", label: "Kardex" },
+  { href: "/pos", label: "Punto de Venta" },
+  { href: "/ayuda", label: "Ayuda" },
 ]
 
 export function AsidePrivate() {
