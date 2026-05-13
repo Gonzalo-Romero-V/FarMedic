@@ -1,17 +1,11 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { AdminDashboardData } from "@/components/custom/admin/dashboard/admin-dashboard-data"
+import { DashboardHeader } from "@/components/custom/admin/dashboard/dashboard-header"
 
 export default function AdminDashboardPage() {
   return (
-    <PagePlaceholder
-      title="Dashboard global"
-      subtitle="Métricas agregadas de todas las sucursales."
-      todos={[
-        "Ventas del día (total agregado)",
-        "Stock crítico por sucursal",
-        "Lotes próximos a vencer",
-        "Pedidos pendientes",
-        "Auditoría reciente",
-      ]}
-    />
+    <section className="container mx-auto flex flex-col gap-6 px-4 py-8">
+      <DashboardHeader />
+      <AdminDashboardData />
+    </section>
   )
 }

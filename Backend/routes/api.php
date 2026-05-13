@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FarmaciaController;
 use App\Http\Controllers\Api\LoteController;
 use App\Http\Controllers\Api\MedicamentoController;
@@ -89,6 +90,9 @@ Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(functi
 
 // ============== ADMIN ONLY ==============
 Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
+    // Dashboard agregado (KPIs + secciones para Frontend/app/(private)/admin/dashboard)
+    Route::get('admin/dashboard', [DashboardController::class, 'admin']);
+
     // Farmacia (config global)
     Route::put('farmacia/{farmacia}', [FarmaciaController::class, 'update']);
 
