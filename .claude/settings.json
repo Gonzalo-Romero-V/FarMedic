@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/vault_sync.py status"
+            "command": "python \"$CLAUDE_PROJECT_DIR/scripts/vault_sync.py\" status"
           }
         ]
       }
