@@ -4,6 +4,7 @@ import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
+import { homeForRole, isRole } from "@/lib/permissions"
 
 function CallbackContent() {
   const router = useRouter()
@@ -39,7 +40,8 @@ function CallbackContent() {
 
           const user = await response.json()
           login(token, user)
-          router.push("/dashboard")
+          const roleName = user?.rol?.nombre
+          router.push(isRole(roleName) ? homeForRole(roleName) : "/")
         } catch (err) {
           console.error(err)
           toast.error("Error al completar el inicio de sesión")

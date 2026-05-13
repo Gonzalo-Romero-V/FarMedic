@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/use-auth"
+import { homeForRole, isRole } from "@/lib/permissions"
 
 type AuthMode = "login" | "register"
 
@@ -41,9 +42,11 @@ export default function AuthPage() {
   }, [searchParams])
 
   useEffect(() => {
-    if (!isAuthLoading && token) {
-      router.push("/dashboard")
-    }
+    if (isAuthLoading || !token) return
+    // Si ya hay sesión activa, redirigir a la home del rol.
+    const stored = localStorage.getItem("auth_user")
+    const role = stored ? (JSON.parse(stored)?.rol?.nombre ?? null) : null
+    router.push(isRole(role) ? homeForRole(role) : "/")
   }, [token, isAuthLoading, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +81,8 @@ export default function AuthPage() {
       }
 
       login(data.token, data.user)
-      router.push("/dashboard")
+      const roleName = data.user?.rol?.nombre
+      router.push(isRole(roleName) ? homeForRole(roleName) : "/")
     } catch (error: any) {
       toast.error(error.message || "Ocurrió un error")
     } finally {
