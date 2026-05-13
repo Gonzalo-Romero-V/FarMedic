@@ -210,11 +210,24 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Cambio de tema: crossfade global vía View Transitions API.
+     El toggle usa document.startViewTransition() y el browser captura un
+     snapshot del DOM viejo y otro del nuevo y los fundé. No requiere
+     reglas universales sobre `*` ni ralentiza hovers individuales. */
+  @media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 300ms;
+      animation-timing-function: ease-in-out;
+    }
   }
 }
 
@@ -226,4 +239,14 @@
   .body { font-size: var(--font-body); font-weight: var(--font-body-weight); line-height: var(--line-body); }
   .small { font-size: var(--font-small); font-weight: var(--font-small-weight); line-height: var(--line-small); }
   .xs { font-size: var(--font-xs); font-weight: var(--font-xs-weight); line-height: var(--line-xs); }
+
+  @keyframes ken-burns {
+    0% { transform: scale(1) translateX(0); }
+    50% { transform: scale(1.05) translateX(-10px); }
+    100% { transform: scale(1) translateX(0); }
+  }
+
+  .animate-ken-burns {
+    animation: ken-burns 20s ease-in-out infinite;
+  }
 }

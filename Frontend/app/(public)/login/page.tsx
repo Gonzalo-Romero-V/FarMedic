@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Loader2, Globe } from "lucide-react"
 import { toast } from "sonner"
 
@@ -17,7 +18,7 @@ export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, token, isLoading: isAuthLoading } = useAuth()
-  
+
   // Estado para alternar entre login y registro
   const [mode, setMode] = useState<AuthMode>("login")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,7 +55,7 @@ export default function AuthPage() {
     setIsSubmitting(true)
 
     const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register/cliente"
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: "POST",
@@ -95,11 +96,27 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col md:flex-row overflow-hidden bg-background">
-      {/* Columna Izquierda: Banner Placeholder */}
-      <div className="relative hidden w-full md:flex md:w-1/2 lg:w-3/5 items-center justify-center bg-background border-r">
-        <span className="text-muted-foreground font-medium uppercase tracking-widest opacity-20 text-4xl">
-          Banner
-        </span>
+      {/* Columna Izquierda: Banner Image */}
+      <div className="relative hidden w-full md:flex md:w-1/2 lg:w-3/5 overflow-hidden">
+        {/* Imagen Base (Normal) */}
+        <Image
+          src="/banner.jpg"
+          alt="FarMedic Banner"
+          fill
+          priority
+          className="object-cover object-left animate-ken-burns"
+        />
+
+        {/* Capa de Desenfoque Progresivo */}
+        <div
+          className="absolute inset-0 backdrop-blur-[6px] [mask-image:linear-gradient(to_right,transparent_20%,black_80%)]"
+        />
+
+        {/* Capa/Película del color de fondo */}
+        <div className="absolute inset-0 bg-background/20" />
+
+        {/* Degradado de difuminado hacia el fondo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-background" />
       </div>
 
       {/* Columna Derecha: Formulario (Desplazado a la izquierda) */}
@@ -110,8 +127,8 @@ export default function AuthPage() {
               {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {mode === "login" 
-                ? "Ingresa tus credenciales para acceder" 
+              {mode === "login"
+                ? "Ingresa tus credenciales para acceder"
                 : "Regístrate como cliente para realizar pedidos online"}
             </p>
           </div>
@@ -131,7 +148,7 @@ export default function AuthPage() {
                   />
                 </div>
               )}
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -221,7 +238,7 @@ export default function AuthPage() {
             {mode === "login" ? (
               <>
                 ¿No tienes una cuenta?{" "}
-                <button 
+                <button
                   onClick={toggleMode}
                   className="font-medium text-primary hover:underline"
                 >
@@ -231,7 +248,7 @@ export default function AuthPage() {
             ) : (
               <>
                 ¿Ya tienes una cuenta?{" "}
-                <button 
+                <button
                   onClick={toggleMode}
                   className="font-medium text-primary hover:underline"
                 >

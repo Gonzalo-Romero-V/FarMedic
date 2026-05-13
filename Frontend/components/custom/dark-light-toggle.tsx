@@ -19,12 +19,25 @@ export function DarkLightToggle() {
   }
 
   const isDark = resolvedTheme === "dark"
+
+  const toggle = () => {
+    const next = isDark ? "light" : "dark"
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
+    }
+    if (typeof doc.startViewTransition !== "function") {
+      setTheme(next)
+      return
+    }
+    doc.startViewTransition(() => setTheme(next))
+  }
+
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={isDark ? "Activar tema claro" : "Activar tema oscuro"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
       className="h-9 w-9"
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
