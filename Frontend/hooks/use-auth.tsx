@@ -26,6 +26,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const TOKEN_COOKIE = "auth_token"
+const ROLE_COOKIE = "auth_role"
+/** 7 días — coincide con el TTL aproximado de los tokens Sanctum por default
+ *  para que la cookie no sobreviva a un token expirado. */
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+
+function setCookie(name: string, value: string, maxAgeSeconds: number) {
+  if (typeof document === "undefined") return
+  const parts = [
+    `${name}=${encodeURIComponent(value)}`,
+    "path=/",
+    `max-age=${maxAgeSeconds}`,
+    "samesite=lax",
+  ]
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    parts.push("secure")
+  }
+  document.cookie = parts.join("; ")
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=; path=/; max-age=0`
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -38,8 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem("auth_user")
 
     if (storedToken && storedUser) {
+      const parsed = JSON.parse(storedUser) as User
       setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+      setUser(parsed)
+      // Re-hidratar cookies por si fueron purgadas (el middleware las necesita).
+      setCookie(TOKEN_COOKIE, storedToken, COOKIE_MAX_AGE)
+      if (parsed?.rol?.nombre) setCookie(ROLE_COOKIE, parsed.rol.nombre, COOKIE_MAX_AGE)
     }
     setIsLoading(false)
   }, [])
@@ -49,8 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser)
     localStorage.setItem("auth_token", newToken)
     localStorage.setItem("auth_user", JSON.stringify(newUser))
+    setCookie(TOKEN_COOKIE, newToken, COOKIE_MAX_AGE)
+    setCookie(ROLE_COOKIE, newUser?.rol?.nombre ?? "", COOKIE_MAX_AGE)
 
-    // Evitar múltiples notificaciones seguidas (debouncing simple por tiempo)
+    // Evitar múltiples notificaciones seguidas (React Strict Mode dispara dos
+    // veces en dev; el flujo OAuth callback → fetchUser → login también).
     const lastToast = (window as any)._last_auth_toast || 0
     if (Date.now() - lastToast > 2000) {
       toast.success(`Bienvenido, ${newUser.nombre}`)
@@ -77,6 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     localStorage.removeItem("auth_token")
     localStorage.removeItem("auth_user")
+    deleteCookie(TOKEN_COOKIE)
+    deleteCookie(ROLE_COOKIE)
     router.push("/login")
   }
 
