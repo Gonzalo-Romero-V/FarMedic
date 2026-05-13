@@ -8,7 +8,7 @@ import type { NavLink } from "@/components/layout/header-shell"
 
 export const clienteNavLinks: readonly NavLink[] = [
   { href: "/cliente/dashboard", label: "Inicio" },
-  { href: "/catalogo", label: "Catálogo" },
+  { href: "/cliente/catalogo", label: "Catálogo" },
   { href: "/cliente/pedidos", label: "Mis pedidos", matchPrefix: "/cliente/pedidos" },
   { href: "/cliente/perfil", label: "Perfil" },
 ]
