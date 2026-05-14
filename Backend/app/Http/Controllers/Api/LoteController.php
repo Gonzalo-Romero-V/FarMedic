@@ -17,12 +17,23 @@ class LoteController extends Controller
 {
     public function index(Request $request)
     {
-        $q = Lote::with(['medicamento', 'proveedor']);
+        // Eager-load completo para que las tablas del frontend muestren columnas
+        // sucursal/categoria sin N+1. medicamento.categoria es N→1, restringimos
+        // columnas para no devolver toda la fila.
+        $q = Lote::with([
+            'medicamento:id,nombre_comercial,principio_activo,categoria_id,stock_minimo,requiere_receta',
+            'medicamento.categoria:id,nombre',
+            'proveedor:id,nombre',
+            'sucursal:id,nombre,ciudad',
+        ]);
         if ($request->filled('sucursal_id')) {
             $q->where('sucursal_id', $request->sucursal_id);
         }
         if ($request->filled('medicamento_id')) {
             $q->where('medicamento_id', $request->medicamento_id);
+        }
+        if ($request->filled('proveedor_id')) {
+            $q->where('proveedor_id', $request->proveedor_id);
         }
         // Alertas RF-03: próximo a vencer (30 días) o vencido
         if ($request->filled('estado')) {
@@ -37,6 +48,17 @@ class LoteController extends Controller
         }
         if ($request->boolean('solo_con_stock')) {
             $q->where('cantidad_actual', '>', 0);
+        }
+        // Búsqueda libre por nombre comercial / principio activo / número de lote
+        if ($request->filled('q')) {
+            $term = '%' . $request->q . '%';
+            $q->where(function ($qq) use ($term) {
+                $qq->where('numero_lote', 'ilike', $term)
+                    ->orWhereHas('medicamento', function ($m) use ($term) {
+                        $m->where('nombre_comercial', 'ilike', $term)
+                            ->orWhere('principio_activo', 'ilike', $term);
+                    });
+            });
         }
         return $q->orderBy('fecha_vencimiento')->paginate($request->integer('per_page', 25));
     }

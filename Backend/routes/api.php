@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FarmaciaController;
+use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\LoteController;
 use App\Http\Controllers\Api\MedicamentoController;
 use App\Http\Controllers\Api\MovimientoStockController;
@@ -92,6 +93,10 @@ Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(functi
 Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
     // Dashboard agregado (KPIs + secciones para Frontend/app/(private)/admin/dashboard)
     Route::get('admin/dashboard', [DashboardController::class, 'admin']);
+
+    // Inventario admin — overview + vista de stock por medicamento
+    Route::get('admin/inventario/overview', [InventarioController::class, 'overview']);
+    Route::get('admin/inventario/medicamentos', [InventarioController::class, 'medicamentos']);
 
     // Farmacia (config global)
     Route::put('farmacia/{farmacia}', [FarmaciaController::class, 'update']);
