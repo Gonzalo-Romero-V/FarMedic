@@ -5,13 +5,13 @@ import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 
 /**
- * Lookups compartidos por las sub-páginas de inventario: catálogos pequeños
- * (sucursales, proveedores, medicamentos, categorías) usados como opciones de
- * selects y filtros. Se cargan una vez por isla cliente.
+ * Lookups admin compartidos por los módulos que necesitan opciones de catálogos
+ * pequeños (sucursales, proveedores, medicamentos, categorías). Se cargan una vez
+ * por isla cliente que los consume.
  *
  * Las APIs paginadas devuelven `{ data: [...], total, ... }`. Cuando el catálogo
- * es chico (sucursales ≈ N, categorías ≈ N) basta `per_page=200`. Para medicamentos
- * grandes hay que usar `q` en autocomplete; para el lote form (V1) precargamos 500.
+ * es chico (sucursales/categorías ≈ N), basta `per_page=200`. Para medicamentos
+ * grandes hay que usar `q` en autocomplete; en V1 precargamos hasta 500.
  */
 
 export type LookupOption = { id: number; label: string }
@@ -33,10 +33,16 @@ async function loadOptions<T extends { id: number }>(
 
 type LookupsState =
   | { status: "loading" }
-  | { status: "ready"; sucursales: LookupOption[]; proveedores: LookupOption[]; medicamentos: LookupOption[]; categorias: LookupOption[] }
+  | {
+      status: "ready"
+      sucursales: LookupOption[]
+      proveedores: LookupOption[]
+      medicamentos: LookupOption[]
+      categorias: LookupOption[]
+    }
   | { status: "error"; error: string }
 
-export function useInventarioLookups(): LookupsState {
+export function useAdminLookups(): LookupsState {
   const [state, setState] = useState<LookupsState>({ status: "loading" })
 
   useEffect(() => {

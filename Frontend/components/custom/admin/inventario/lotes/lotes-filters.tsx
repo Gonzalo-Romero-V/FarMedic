@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
-import type { LookupOption } from "../_shared/use-lookups"
+import type { LookupOption } from "../../_shared/use-lookups"
 import type { LoteEstado } from "../_shared/lote-estado-badge"
 import type { LotesFilters } from "./use-admin-lotes"
 

@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useInventarioLookups } from "../_shared/use-lookups"
+import { useAdminLookups } from "../../_shared/use-lookups"
 import { LoteAltaSheet } from "./lote-alta-sheet"
 import { LoteEditSheet } from "./lote-edit-sheet"
 import { LotesFiltersBar } from "./lotes-filters"
@@ -24,7 +24,7 @@ const SEARCH_DEBOUNCE_MS = 300
  * - Tras crear/editar un lote, dispara `reload()` del hook.
  */
 export function LotesData() {
-  const lookupsState = useInventarioLookups()
+  const lookupsState = useAdminLookups()
   const [filters, setFilters] = useState<LotesFilters>(DEFAULT_FILTERS)
   const [searchInput, setSearchInput] = useState("")
   const [editing, setEditing] = useState<LoteRow | null>(null)

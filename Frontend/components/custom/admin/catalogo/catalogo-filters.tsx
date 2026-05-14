@@ -13,30 +13,33 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
-import type { LookupOption } from "../../_shared/use-lookups"
-import type { MedicamentosFilters } from "./use-admin-medicamentos"
+import type { LookupOption } from "../_shared/use-lookups"
+import type { CatalogoFilters } from "./use-admin-catalogo"
 
 type Props = {
-  filters: MedicamentosFilters
+  filters: CatalogoFilters
   sucursales: LookupOption[]
   categorias: LookupOption[]
-  onChange: (next: MedicamentosFilters) => void
+  onChange: (next: CatalogoFilters) => void
 }
 
-export function MedicamentosFiltersBar({ filters, sucursales, categorias, onChange }: Props) {
-  const patch = (next: Partial<MedicamentosFilters>) =>
+export function CatalogoFiltersBar({ filters, sucursales, categorias, onChange }: Props) {
+  const patch = (next: Partial<CatalogoFilters>) =>
     onChange({ ...filters, page: 1, ...next })
+
+  // Por defecto el backend filtra solo activos; el toggle "Incluir inactivos" desactiva ese filtro.
+  const incluirInactivos = filters.soloActivos === false
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
       <div className="flex-1 min-w-[220px] space-y-1.5">
-        <Label htmlFor="med-q" className="xs uppercase tracking-wide text-muted-foreground">
+        <Label htmlFor="cat-q" className="xs uppercase tracking-wide text-muted-foreground">
           Buscar
         </Label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            id="med-q"
+            id="cat-q"
             placeholder="Nombre, principio activo o código de barras"
             value={filters.q ?? ""}
             onChange={(e) => patch({ q: e.target.value })}
@@ -87,12 +90,12 @@ export function MedicamentosFiltersBar({ filters, sucursales, categorias, onChan
 
       <div className="flex items-center gap-2 sm:pb-2">
         <Switch
-          id="solo-critico"
-          checked={!!filters.soloCritico}
-          onCheckedChange={(v) => patch({ soloCritico: v })}
+          id="incluir-inactivos"
+          checked={incluirInactivos}
+          onCheckedChange={(v) => patch({ soloActivos: v ? false : undefined })}
         />
-        <Label htmlFor="solo-critico" className="small">
-          Solo stock crítico
+        <Label htmlFor="incluir-inactivos" className="small">
+          Incluir inactivos
         </Label>
       </div>
     </div>

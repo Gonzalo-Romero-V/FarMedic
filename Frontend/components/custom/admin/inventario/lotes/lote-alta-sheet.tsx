@@ -35,7 +35,7 @@ import {
 import { Plus } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 
-import type { LookupOption } from "../_shared/use-lookups"
+import type { LookupOption } from "../../_shared/use-lookups"
 import { ApiError } from "@/lib/api"
 import { createLote } from "./use-admin-lotes"
 

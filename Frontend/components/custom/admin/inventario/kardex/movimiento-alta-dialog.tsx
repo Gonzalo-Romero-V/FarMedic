@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/hooks/use-auth"
 import { ApiError } from "@/lib/api"
 
-import type { LookupOption } from "../_shared/use-lookups"
+import type { LookupOption } from "../../_shared/use-lookups"
 import {
   createMovimiento,
   fetchLotesDeMedicamento,

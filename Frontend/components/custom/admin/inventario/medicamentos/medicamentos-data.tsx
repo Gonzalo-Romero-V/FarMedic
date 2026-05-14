@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useInventarioLookups } from "../_shared/use-lookups"
+import { useAdminLookups } from "../../_shared/use-lookups"
 import { MedicamentosFiltersBar } from "./medicamentos-filters"
 import { MedicamentosTable } from "./medicamentos-table"
 import { type MedicamentosFilters, useAdminMedicamentos } from "./use-admin-medicamentos"
@@ -16,7 +16,7 @@ const DEFAULT_FILTERS: MedicamentosFilters = { page: 1, perPage: 25 }
 const SEARCH_DEBOUNCE_MS = 300
 
 export function MedicamentosData() {
-  const lookupsState = useInventarioLookups()
+  const lookupsState = useAdminLookups()
   const [filters, setFilters] = useState<MedicamentosFilters>(DEFAULT_FILTERS)
   const [searchInput, setSearchInput] = useState("")
 

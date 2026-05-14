@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useInventarioLookups } from "../_shared/use-lookups"
+import { useAdminLookups } from "../../_shared/use-lookups"
 import { KardexFiltersBar } from "./kardex-filters"
 import { KardexTable } from "./kardex-table"
 import { MovimientoAltaDialog } from "./movimiento-alta-dialog"
@@ -16,7 +16,7 @@ import { type KardexFilters, useAdminKardex } from "./use-admin-kardex"
 const DEFAULT_FILTERS: KardexFilters = { page: 1, perPage: 50 }
 
 export function KardexData() {
-  const lookupsState = useInventarioLookups()
+  const lookupsState = useAdminLookups()
   const [filters, setFilters] = useState<KardexFilters>(DEFAULT_FILTERS)
 
   const kardexState = useAdminKardex(filters)

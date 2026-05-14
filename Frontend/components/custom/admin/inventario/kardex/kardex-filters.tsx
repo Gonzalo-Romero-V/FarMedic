@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import type { LookupOption } from "../_shared/use-lookups"
+import type { LookupOption } from "../../_shared/use-lookups"
 import type { KardexFilters, MovimientoTipoBackend } from "./use-admin-kardex"
 
 type Props = {
