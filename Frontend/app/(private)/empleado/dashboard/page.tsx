@@ -1,16 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { EmpleadoDashboardData } from "@/components/custom/empleado/dashboard/empleado-dashboard-data"
 
 export default function EmpleadoDashboardPage() {
   return (
-    <PagePlaceholder
-      title="Dashboard de sucursal"
-      subtitle="Tu actividad en la sucursal asignada."
-      todos={[
-        "Ventas del día",
-        "Alertas de stock bajo",
-        "Productos próximos a caducar",
-        "Movimientos recientes (Kardex local)",
-      ]}
-    />
+    <div className="flex flex-col gap-6 p-4">
+      <div>
+        <h1 className="h2">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Indicadores y operación reciente de tu sucursal.
+        </p>
+      </div>
+      <EmpleadoDashboardData />
+    </div>
   )
 }

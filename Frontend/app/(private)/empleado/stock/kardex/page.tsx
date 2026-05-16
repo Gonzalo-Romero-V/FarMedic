@@ -1,14 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { KardexData } from "@/components/custom/empleado/stock/kardex/kardex-data"
 
 export default function EmpleadoKardexPage() {
   return (
-    <PagePlaceholder
-      title="Kardex local"
-      subtitle="Movimientos de stock de tu sucursal — solo lectura. Filtrado obligatorio por `sucursal_id`."
-      todos={[
-        "Filtros: fecha, tipo, lote",
-        "Detalle de cada movimiento (referencia polimórfica: Venta / Pedido / Proveedor / Ajuste)",
-      ]}
-    />
+    <div className="flex flex-col gap-4 p-4">
+      <div>
+        <h1 className="h2">Kardex</h1>
+        <p className="text-sm text-muted-foreground">
+          Movimientos de stock de tu sucursal. Los ajustes manuales sin signo claro los hace el administrador.
+        </p>
+      </div>
+      <KardexData />
+    </div>
   )
 }

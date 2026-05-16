@@ -1,15 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { ClientesData } from "@/components/custom/empleado/clientes/clientes-data"
 
 export default function EmpleadoClientesPage() {
   return (
-    <PagePlaceholder
-      title="Clientes"
-      subtitle="Clientes que pasaron por tu sucursal — para asociar venta o gestionar pedidos."
-      todos={[
-        "Búsqueda por email / nombre / teléfono",
-        "Detalle: historial de ventas y pedidos",
-        "Datos de contacto (visibles en contexto de gestión de entregas)",
-      ]}
-    />
+    <div className="flex flex-col gap-4 p-4">
+      <div>
+        <h1 className="h2">Clientes</h1>
+        <p className="text-sm text-muted-foreground">
+          Clientes registrados. Buscá por nombre o email y revisá su historial.
+        </p>
+      </div>
+      <ClientesData />
+    </div>
   )
 }

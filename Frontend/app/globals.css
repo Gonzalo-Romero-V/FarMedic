@@ -231,6 +231,34 @@
   }
 }
 
+/* ====================================================================== */
+/* PRINT — comprobante POS (RF-08 placeholder)                              */
+/* ====================================================================== */
+@media print {
+  /* Oculta todo el chrome y solo deja visible el comprobante imprimible.   */
+  body > *:not(:has(#pos-comprobante-printable)) {
+    display: none !important;
+  }
+  /* Pero como el Dialog vive en un portal, también ocultamos los wrappers  */
+  /* del Dialog (overlay, header, footer) — el contenido a imprimir es      */
+  /* solo el div con id="pos-comprobante-printable".                        */
+  [data-slot="dialog-overlay"] { display: none !important; }
+  [data-slot="dialog-content"] {
+    position: static !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+  /* Tipografía pensada para receipt 80mm cuando el browser lo permite. */
+  #pos-comprobante-printable {
+    color: #000;
+    font-size: 11pt;
+  }
+}
+
 @layer utilities {
   .h1 { font-size: var(--font-h1); font-weight: var(--font-h1-weight); line-height: var(--line-h1); letter-spacing: -0.01em; }
   .h2 { font-size: var(--font-h2); font-weight: var(--font-h2-weight); line-height: var(--line-h2); letter-spacing: -0.005em; }

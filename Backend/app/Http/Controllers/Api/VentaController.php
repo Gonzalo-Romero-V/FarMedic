@@ -7,6 +7,7 @@ use App\Models\Farmacia;
 use App\Models\Lote;
 use App\Models\Medicamento;
 use App\Models\MovimientoStock;
+use App\Models\Usuario;
 use App\Models\Venta;
 use App\Models\VentaItem;
 use Illuminate\Http\Request;
@@ -16,40 +17,59 @@ use Illuminate\Support\Facades\DB;
  * Ventas son inmutables tras confirmar. Solo se permite cambiar estado a 'anulada' (genera
  * movimientos inversos). store() es transaccional: descuenta lotes FEFO + crea items +
  * crea movimientos Kardex tipo='venta'.
+ *
+ * sucursal_id y usuario_id NO se aceptan del body — se toman de auth()->user() para evitar
+ * que un empleado venda contra otra sucursal o atribuya la venta a otro usuario
+ * (domain/venta.md + decisions/rbac.md).
  */
 class VentaController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
+
         $q = Venta::with(['items.lote.medicamento', 'usuario', 'cliente']);
-        if ($request->filled('sucursal_id')) {
+
+        // Empleado solo ve ventas de su sucursal; admin ve todas (puede filtrar).
+        if ($user->esEmpleado()) {
+            $q->where('sucursal_id', $user->sucursal_id);
+        } elseif ($request->filled('sucursal_id')) {
             $q->where('sucursal_id', $request->sucursal_id);
         }
+
         if ($request->filled('estado')) {
             $q->where('estado', $request->estado);
         }
+        if ($request->filled('metodo_pago')) {
+            $q->where('metodo_pago', $request->metodo_pago);
+        }
         if ($request->filled('desde')) {
-            $q->where('fecha', '>=', $request->desde);
+            $q->whereDate('fecha', '>=', $request->desde);
         }
         if ($request->filled('hasta')) {
-            $q->where('fecha', '<=', $request->hasta);
+            $q->whereDate('fecha', '<=', $request->hasta);
         }
+
         return $q->orderByDesc('fecha')->paginate($request->integer('per_page', 25));
     }
 
-    public function show(Venta $venta)
+    public function show(Request $request, Venta $venta)
     {
+        $user = $request->user();
+        if ($user->esEmpleado() && $venta->sucursal_id !== $user->sucursal_id) {
+            abort(403, 'Venta de otra sucursal');
+        }
         return $venta->load(['items.lote.medicamento', 'usuario', 'cliente', 'receta', 'sucursal']);
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        abort_if($user->sucursal_id === null, 422, 'Usuario sin sucursal asignada no puede vender');
+
         $validated = $request->validate([
-            'sucursal_id' => ['required', 'exists:sucursales,id'],
-            'usuario_id' => ['required', 'exists:usuarios,id'],
             'cliente_id' => ['nullable', 'exists:usuarios,id'],
             'receta_id' => ['nullable', 'exists:recetas,id'],
-            'descuento_total' => ['nullable', 'numeric', 'min:0'],
             'metodo_pago' => ['required', 'in:efectivo,tarjeta,transferencia'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.medicamento_id' => ['required', 'exists:medicamentos,id'],
@@ -57,8 +77,14 @@ class VentaController extends Controller
             'items.*.descuento_item' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        return DB::transaction(function () use ($validated) {
-            $sucursalId = $validated['sucursal_id'];
+        // cliente_id, si viene, debe ser un usuario con rol cliente
+        if (!empty($validated['cliente_id'])) {
+            $esCliente = Usuario::clientes()->whereKey($validated['cliente_id'])->exists();
+            abort_unless($esCliente, 422, 'cliente_id no corresponde a un cliente');
+        }
+
+        return DB::transaction(function () use ($validated, $user) {
+            $sucursalId = $user->sucursal_id;
             $ivaTasa = Farmacia::value('iva_tasa');
 
             // Validar receta si algún medicamento la requiere
@@ -73,6 +99,8 @@ class VentaController extends Controller
 
             foreach ($validated['items'] as $i) {
                 $med = Medicamento::findOrFail($i['medicamento_id']);
+                abort_if($med->sucursal_id !== $sucursalId, 422, "Medicamento {$med->id} no pertenece a la sucursal del usuario");
+
                 $restante = $i['cantidad'];
 
                 // FEFO: lotes con stock, vencimiento más próximo primero
@@ -109,19 +137,18 @@ class VentaController extends Controller
                 }
             }
 
-            $descuentoTotal = $validated['descuento_total'] ?? 0;
-            $base = max(0, $subtotal - $descuentoTotal);
+            $base = max(0, $subtotal);
             $impuesto = round($base * ($ivaTasa / 100), 2);
             $total = $base + $impuesto;
 
             $venta = Venta::create([
                 'sucursal_id' => $sucursalId,
-                'usuario_id' => $validated['usuario_id'],
+                'usuario_id' => $user->id,
                 'cliente_id' => $validated['cliente_id'] ?? null,
                 'receta_id' => $validated['receta_id'] ?? null,
-                'numero_comprobante' => 'V-' . now()->format('YmdHis') . '-' . random_int(100, 999),
+                'numero_comprobante' => $this->siguienteComprobante($sucursalId),
                 'subtotal' => $subtotal,
-                'descuento_total' => $descuentoTotal,
+                'descuento_total' => 0,
                 'iva_tasa_aplicada' => $ivaTasa,
                 'impuesto_total' => $impuesto,
                 'total' => $total,
@@ -137,7 +164,7 @@ class VentaController extends Controller
                 MovimientoStock::create([
                     'lote_id' => $vi->lote_id,
                     'sucursal_id' => $sucursalId,
-                    'usuario_id' => $validated['usuario_id'],
+                    'usuario_id' => $user->id,
                     'tipo' => 'venta',
                     'cantidad' => -$vi->cantidad,
                     'referencia_tipo' => Venta::class,
@@ -145,12 +172,13 @@ class VentaController extends Controller
                 ]);
             }
 
-            return $venta->load('items.lote.medicamento');
+            return $venta->load(['items.lote.medicamento', 'cliente', 'receta', 'usuario']);
         });
     }
 
     /**
      * Anular una venta: revierte stock con movimientos devolucion_cliente.
+     * Solo admin (restringido por ruta).
      */
     public function anular(Request $request, Venta $venta)
     {
@@ -159,11 +187,12 @@ class VentaController extends Controller
         }
 
         $validated = $request->validate([
-            'usuario_id' => ['required', 'exists:usuarios,id'],
             'justificacion' => ['required', 'string'],
         ]);
 
-        return DB::transaction(function () use ($venta, $validated) {
+        $user = $request->user();
+
+        return DB::transaction(function () use ($venta, $validated, $user) {
             foreach ($venta->items as $item) {
                 $lote = $item->lote()->lockForUpdate()->first();
                 $lote->cantidad_actual += $item->cantidad;
@@ -172,7 +201,7 @@ class VentaController extends Controller
                 MovimientoStock::create([
                     'lote_id' => $item->lote_id,
                     'sucursal_id' => $venta->sucursal_id,
-                    'usuario_id' => $validated['usuario_id'],
+                    'usuario_id' => $user->id,
                     'tipo' => 'devolucion_cliente',
                     'cantidad' => $item->cantidad,
                     'referencia_tipo' => Venta::class,
@@ -184,5 +213,23 @@ class VentaController extends Controller
             $venta->update(['estado' => 'anulada']);
             return $venta->load('items');
         });
+    }
+
+    /**
+     * Serial autoincremental zero-padded por sucursal (domain/venta.md).
+     * Se invoca dentro de la transacción del store(): el lockForUpdate sobre las ventas
+     * existentes de la sucursal serializa la generación para evitar colisiones bajo
+     * concurrencia. El unique index (sucursal_id, numero_comprobante) sigue siendo el
+     * backstop final.
+     */
+    private function siguienteComprobante(int $sucursalId): string
+    {
+        $ultimo = Venta::where('sucursal_id', $sucursalId)
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->value('numero_comprobante');
+
+        $n = $ultimo ? ((int) $ultimo) + 1 : 1;
+        return str_pad((string) $n, 7, '0', STR_PAD_LEFT);
     }
 }

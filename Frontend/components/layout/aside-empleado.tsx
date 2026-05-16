@@ -9,6 +9,7 @@ import type { NavLink } from "@/components/layout/header-shell"
 export const empleadoNavLinks: readonly NavLink[] = [
   { href: "/empleado/dashboard", label: "Dashboard" },
   { href: "/empleado/pos", label: "Punto de venta" },
+  { href: "/empleado/ventas", label: "Ventas" },
   { href: "/empleado/stock", label: "Stock", matchPrefix: "/empleado/stock" },
   { href: "/empleado/clientes", label: "Clientes" },
 ]

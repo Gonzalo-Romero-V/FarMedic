@@ -36,9 +36,12 @@ export async function apiFetch<T>(path: string, opts: ApiOptions = {}): Promise<
   const token = readToken()
   const url = `${API_BASE}/api${path.startsWith("/") ? path : `/${path}`}`
 
+  // FormData se envía tal cual: el browser fija Content-Type con el boundary correcto.
+  const isFormData = typeof FormData !== "undefined" && opts.body instanceof FormData
+
   const headers: HeadersInit = {
     Accept: "application/json",
-    ...(opts.body !== undefined ? { "Content-Type": "application/json" } : {}),
+    ...(opts.body !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
@@ -46,7 +49,12 @@ export async function apiFetch<T>(path: string, opts: ApiOptions = {}): Promise<
     method: opts.method ?? "GET",
     headers,
     signal: opts.signal,
-    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+    body:
+      opts.body === undefined
+        ? undefined
+        : isFormData
+          ? (opts.body as FormData)
+          : JSON.stringify(opts.body),
   })
 
   if (!res.ok) {

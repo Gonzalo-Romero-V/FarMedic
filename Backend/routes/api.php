@@ -3,12 +3,14 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\FarmaciaController;
 use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\LoteController;
 use App\Http\Controllers\Api\MedicamentoController;
 use App\Http\Controllers\Api\MovimientoStockController;
 use App\Http\Controllers\Api\PedidoController;
+use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\ProveedorController;
 use App\Http\Controllers\Api\RecetaController;
 use App\Http\Controllers\Api\RolController;
@@ -75,6 +77,16 @@ Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(functi
     Route::get('movimientos-stock', [MovimientoStockController::class, 'index']);
     Route::get('movimientos-stock/{movimientoStock}', [MovimientoStockController::class, 'show']);
     Route::post('movimientos-stock', [MovimientoStockController::class, 'store']);
+
+    // POS — Búsqueda liviana (medicamentos en sucursal del user + clientes)
+    Route::get('pos/medicamentos', [PosController::class, 'medicamentos']);
+    Route::get('pos/clientes', [PosController::class, 'clientes']);
+
+    // Empleado — dashboards y módulos locales (filtrados por su sucursal en backend)
+    Route::get('empleado/dashboard', [EmpleadoController::class, 'dashboard']);
+    Route::get('empleado/inventario/medicamentos', [EmpleadoController::class, 'inventarioMedicamentos']);
+    Route::get('empleado/clientes', [EmpleadoController::class, 'clientes']);
+    Route::get('empleado/clientes/{id}', [EmpleadoController::class, 'clienteDetalle']);
 
     // POS — Ventas (alta y consulta)
     Route::get('ventas', [VentaController::class, 'index']);
