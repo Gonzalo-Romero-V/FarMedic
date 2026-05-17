@@ -110,6 +110,12 @@ export type MovimientoCreateInput = {
 }
 
 export async function createMovimiento(input: MovimientoCreateInput): Promise<MovimientoRow> {
+  // `ajuste` vive en su propio endpoint admin-only (split de ruta para enforcement
+  // de `stock.adjust`). El backend rechaza tipo=ajuste en /movimientos-stock.
+  if (input.tipo === "ajuste") {
+    const { tipo: _tipo, ...rest } = input
+    return apiFetch<MovimientoRow>("/movimientos-stock/ajuste", { method: "POST", body: rest })
+  }
   return apiFetch<MovimientoRow>("/movimientos-stock", { method: "POST", body: input })
 }
 

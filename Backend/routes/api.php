@@ -142,4 +142,8 @@ Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
 
     // Anular venta (solo admin)
     Route::post('ventas/{venta}/anular', [VentaController::class, 'anular']);
+
+    // Ajuste manual de stock (solo admin — corrección administrativa, no operación
+    // del flujo de venta/recepción). Split de ruta vs /movimientos-stock estándar.
+    Route::post('movimientos-stock/ajuste', [MovimientoStockController::class, 'ajustar']);
 });
