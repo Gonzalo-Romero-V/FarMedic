@@ -14,6 +14,10 @@ interface User {
   }
   sucursal_id: number | null
   sucursal?: any
+  telefono?: string | null
+  direccion?: string | null
+  google_oauth_id?: string | null
+  created_at?: string | null
 }
 
 interface AuthContextType {
@@ -22,6 +26,9 @@ interface AuthContextType {
   isLoading: boolean
   login: (token: string, user: User) => void
   logout: () => void
+  /** Reemplaza el user persistido sin tocar el token. Usado por mutaciones
+   *  self-edit (ej. perfil) que devuelven el user actualizado. */
+  setUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -114,8 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/login")
   }
 
+  const replaceUser = (next: User) => {
+    setUser(next)
+    localStorage.setItem("auth_user", JSON.stringify(next))
+    if (next?.rol?.nombre) setCookie(ROLE_COOKIE, next.rol.nombre, COOKIE_MAX_AGE)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, isLoading, login, logout, setUser: replaceUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

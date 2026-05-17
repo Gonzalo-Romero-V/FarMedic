@@ -91,6 +91,57 @@ class AuthController extends Controller
     }
 
     /**
+     * Self-update del perfil. Whitelist estricta: el caller no puede tocar
+     * `sucursal_id`, `rol_id`, `activo`, `email` ni `password` desde acá.
+     * `direccion` solo aplica al rol cliente (RNF-04 / [[cliente]]); en
+     * administrador/empleado el campo no se usa y se ignora si llega.
+     */
+    public function updateMe(Request $request)
+    {
+        $user = $request->user();
+
+        $rules = [
+            'nombre' => ['sometimes', 'string', 'max:255'],
+            'telefono' => ['sometimes', 'nullable', 'string', 'max:50'],
+        ];
+        if ($user->esCliente()) {
+            $rules['direccion'] = ['sometimes', 'nullable', 'string', 'max:255'];
+        }
+
+        $validated = $request->validate($rules);
+        $user->update($validated);
+
+        return $user->load('rol', 'sucursal');
+    }
+
+    /**
+     * Cambio de contraseña del propio usuario. Exige conocer la actual y
+     * revoca el resto de los tokens (mantiene el de la sesión en curso)
+     * para forzar re-login en otros dispositivos.
+     */
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'password_actual' => ['required', 'string'],
+            'password_nueva' => ['required', 'string', 'min:8', 'different:password_actual'],
+        ]);
+
+        $user = $request->user();
+        if (! Hash::check($validated['password_actual'], $user->password)) {
+            throw ValidationException::withMessages([
+                'password_actual' => ['La contraseña actual no es correcta'],
+            ]);
+        }
+
+        $user->update(['password' => Hash::make($validated['password_nueva'])]);
+
+        $tokenActualId = $request->user()->currentAccessToken()->id;
+        $user->tokens()->where('id', '!=', $tokenActualId)->delete();
+
+        return response()->noContent();
+    }
+
+    /**
      * Inicio del flujo OAuth — redirige al consent de Google.
      * Vive en web.php (no /api) porque Google nos devuelve por HTTP 302.
      */

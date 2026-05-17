@@ -3,28 +3,29 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-import { usePermissions } from "@/hooks/use-permissions"
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { useAuth } from "@/hooks/use-auth"
+import { isRole } from "@/lib/permissions"
+import { ROLE_URL_PREFIX } from "@/lib/permissions/role-routes"
 
 /**
- * Perfil compartido para admin/empleado. Para el cliente, redirige a
- * `/cliente/perfil` (que tiene chrome de cliente).
+ * Dispatcher fino: cada rol tiene su propio perfil bajo su chrome (admin,
+ * empleado, cliente). Esta página redirige al `<rol>/perfil` correspondiente.
+ * Existe para mantener un punto de entrada estable desde headers/asides sin
+ * que cada link conozca el prefijo del rol.
  */
-export default function PerfilPage() {
+export default function PerfilDispatcherPage() {
   const router = useRouter()
-  const { isCliente, isLoading } = usePermissions()
+  const { user, isLoading } = useAuth()
 
   useEffect(() => {
-    if (!isLoading && isCliente) router.push("/cliente/perfil")
-  }, [isCliente, isLoading, router])
+    if (isLoading || !user) return
+    const role = user.rol?.nombre
+    if (isRole(role)) {
+      router.replace(`${ROLE_URL_PREFIX[role]}/perfil`)
+    } else {
+      router.replace("/login")
+    }
+  }, [user, isLoading, router])
 
-  if (isLoading || isCliente) return null
-
-  return (
-    <PagePlaceholder
-      title="Mi perfil"
-      subtitle="Datos personales y de contacto."
-      todos={["Nombre, email", "Sucursal asignada (empleado/admin)", "Cambio de contraseña"]}
-    />
-  )
+  return null
 }

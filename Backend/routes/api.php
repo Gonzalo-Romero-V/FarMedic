@@ -50,6 +50,8 @@ Route::get('medicamentos/{medicamento}', [MedicamentoController::class, 'show'])
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $r) => $r->user()->load('rol', 'sucursal'));
     Route::get('auth/me', [AuthController::class, 'me']);
+    Route::put('auth/me', [AuthController::class, 'updateMe']);
+    Route::post('auth/me/password', [AuthController::class, 'updatePassword']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
 
     Route::get('sucursales/{sucursal}', [SucursalController::class, 'show']);
