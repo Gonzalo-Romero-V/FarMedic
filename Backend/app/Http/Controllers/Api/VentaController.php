@@ -10,6 +10,7 @@ use App\Models\MovimientoStock;
 use App\Models\Usuario;
 use App\Models\Venta;
 use App\Models\VentaItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -174,6 +175,30 @@ class VentaController extends Controller
 
             return $venta->load(['items.lote.medicamento', 'cliente', 'receta', 'usuario']);
         });
+    }
+
+    /**
+     * Comprobante PDF de la venta. Mismo enforcement que show(): empleado solo
+     * accede a las ventas de su sucursal; admin a todas. Render con Blade + dompdf
+     * (misma stack que reportes.mensual).
+     */
+    public function comprobantePdf(Request $request, Venta $venta)
+    {
+        $user = $request->user();
+        if ($user->esEmpleado() && $venta->sucursal_id !== $user->sucursal_id) {
+            abort(403, 'Venta de otra sucursal');
+        }
+
+        $venta->load(['items.lote.medicamento', 'usuario', 'cliente', 'sucursal', 'receta']);
+        $farmacia = Farmacia::first();
+
+        $pdf = Pdf::loadView('ventas.comprobante', [
+            'venta' => $venta,
+            'farmacia' => $farmacia,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = sprintf('comprobante-%s.pdf', $venta->numero_comprobante);
+        return $pdf->download($filename);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Farmacia;
 use App\Models\MovimientoStock;
 use App\Models\Sucursal;
 use App\Models\Venta;
+use App\Models\VentaItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -72,9 +73,39 @@ class ReportesController extends Controller
             'generado_en' => now()->toIso8601String(),
             'sucursales' => $sucursales,
             'ventas' => $this->seccionVentas($inicio, $fin),
+            'top_productos' => $this->seccionTopProductos($inicio, $fin),
             'stock_critico' => $this->seccionStockCritico($fin),
             'kardex' => $this->seccionKardex($inicio, $fin),
         ];
+    }
+
+    /**
+     * Top 10 productos más vendidos del período (RF-13). Suma cantidades y montos
+     * a partir de `venta_items` joineando contra `ventas` (solo estado=completada).
+     * Se ordena por unidades vendidas DESC; en caso de empate, por monto DESC.
+     */
+    private function seccionTopProductos(Carbon $inicio, Carbon $fin): array
+    {
+        return VentaItem::query()
+            ->join('ventas', 'ventas.id', '=', 'venta_items.venta_id')
+            ->join('lotes', 'lotes.id', '=', 'venta_items.lote_id')
+            ->join('medicamentos', 'medicamentos.id', '=', 'lotes.medicamento_id')
+            ->whereBetween('ventas.fecha', [$inicio, $fin])
+            ->where('ventas.estado', 'completada')
+            ->groupBy('medicamentos.id', 'medicamentos.nombre_comercial', 'medicamentos.principio_activo')
+            ->selectRaw(
+                'medicamentos.id AS medicamento_id, '
+                . 'medicamentos.nombre_comercial, '
+                . 'medicamentos.principio_activo, '
+                . 'COALESCE(SUM(venta_items.cantidad), 0) AS unidades, '
+                . 'COALESCE(SUM(venta_items.subtotal), 0) AS monto, '
+                . 'COUNT(DISTINCT ventas.id) AS ventas_distintas'
+            )
+            ->orderByDesc('unidades')
+            ->orderByDesc('monto')
+            ->limit(10)
+            ->get()
+            ->all();
     }
 
     /**

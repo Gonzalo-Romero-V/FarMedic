@@ -1,18 +1,22 @@
 "use client"
 
+import { Download } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import type { VentaResponse } from "../pos/use-pos"
+import { descargarComprobantePdf, type VentaResponse } from "../pos/use-pos"
 import { fetchVentaDetalle } from "./use-empleado-ventas"
 
 type Props = {
@@ -28,6 +32,20 @@ function asNum(v: string | number | null | undefined): number {
 export function VentaDetalleDialog({ ventaId, onClose }: Props) {
   const [venta, setVenta] = useState<VentaResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [descargando, setDescargando] = useState(false)
+
+  const handleDescargar = async () => {
+    if (!venta) return
+    setDescargando(true)
+    try {
+      await descargarComprobantePdf(venta.id, venta.numero_comprobante)
+      toast.success("Comprobante descargado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al descargar")
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   useEffect(() => {
     if (ventaId === null) {
@@ -126,6 +144,15 @@ export function VentaDetalleDialog({ ventaId, onClose }: Props) {
               </div>
             </div>
           </div>
+        )}
+
+        {venta && (
+          <DialogFooter>
+            <Button onClick={handleDescargar} disabled={descargando}>
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              {descargando ? "Generando…" : "Descargar PDF"}
+            </Button>
+          </DialogFooter>
         )}
       </DialogContent>
     </Dialog>

@@ -31,6 +31,9 @@ export type PosMedicamento = {
 export type CartItem = {
   medicamento: PosMedicamento
   cantidad: number
+  /** Descuento total aplicado al item (USD absoluto, no porcentaje). Se reparte
+   *  proporcionalmente entre lotes si el item se sirve desde varios lotes FEFO. */
+  descuento: number
 }
 
 export type PosClienteOption = {
@@ -43,7 +46,11 @@ export type VentaCreateInput = {
   cliente_id: number | null
   receta_id: number | null
   metodo_pago: MetodoPago
-  items: { medicamento_id: number; cantidad: number }[]
+  items: {
+    medicamento_id: number
+    cantidad: number
+    descuento_item?: number
+  }[]
 }
 
 export type VentaItemResponse = {
@@ -104,7 +111,7 @@ export function usePosCart() {
         return next
       }
       if (med.stock_actual <= 0) return prev
-      return [...prev, { medicamento: med, cantidad: 1 }]
+      return [...prev, { medicamento: med, cantidad: 1, descuento: 0 }]
     })
   }, [])
 
@@ -114,9 +121,23 @@ export function usePosCart() {
         .map((it) => {
           if (it.medicamento.id !== medicamentoId) return it
           const clamped = Math.max(0, Math.min(cantidad, it.medicamento.stock_actual))
-          return { ...it, cantidad: clamped }
+          // Si la cantidad cae a 0 el item se filtra; recalcular descuento maximo
+          // tampoco hace falta porque la linea desaparece.
+          const maxDescuento = it.medicamento.precio * clamped
+          return { ...it, cantidad: clamped, descuento: Math.min(it.descuento, maxDescuento) }
         })
         .filter((it) => it.cantidad > 0),
+    )
+  }, [])
+
+  const setDescuento = useCallback((medicamentoId: number, descuento: number) => {
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.medicamento.id !== medicamentoId) return it
+        const max = it.medicamento.precio * it.cantidad
+        const clamped = Math.max(0, Math.min(descuento, max))
+        return { ...it, descuento: clamped }
+      }),
     )
   }, [])
 
@@ -131,18 +152,21 @@ export function usePosCart() {
     [items],
   )
 
-  return { items, addItem, setCantidad, removeItem, clear, requiereReceta }
+  return { items, addItem, setCantidad, setDescuento, removeItem, clear, requiereReceta }
 }
 
 /**
  * Totales con IVA snapshot — solo para previsualizar en el carrito.
  * Los valores autoritativos los calcula el backend y vienen en VentaResponse.
+ * Descuentos por item (USD) se restan del bruto antes de calcular IVA.
  */
 export function calcularTotales(items: CartItem[], ivaTasa: number) {
-  const subtotal = items.reduce((sum, it) => sum + it.medicamento.precio * it.cantidad, 0)
+  const bruto = items.reduce((sum, it) => sum + it.medicamento.precio * it.cantidad, 0)
+  const descuentos = items.reduce((sum, it) => sum + (it.descuento ?? 0), 0)
+  const subtotal = Math.max(0, bruto - descuentos)
   const impuesto = Math.round(subtotal * (ivaTasa / 100) * 100) / 100
   const total = subtotal + impuesto
-  return { subtotal, impuesto, total }
+  return { bruto, descuentos, subtotal, impuesto, total }
 }
 
 export async function crearReceta(input: RecetaCreateInput): Promise<RecetaResponse> {
@@ -158,6 +182,46 @@ export async function crearReceta(input: RecetaCreateInput): Promise<RecetaRespo
 
 export async function crearVenta(input: VentaCreateInput): Promise<VentaResponse> {
   return apiFetch<VentaResponse>("/ventas", { method: "POST", body: input })
+}
+
+/**
+ * Descarga el comprobante PDF de una venta. Mismo patrón que descargarReportePdf
+ * en admin/reportes: blob + Bearer (window.open no permite headers custom).
+ */
+export async function descargarComprobantePdf(
+  ventaId: number,
+  numeroComprobante: string,
+): Promise<void> {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ""
+  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
+
+  const res = await fetch(`${API_BASE}/api/ventas/${ventaId}/comprobante.pdf`, {
+    headers: {
+      Accept: "application/pdf",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!res.ok) {
+    let message = `Error ${res.status}`
+    try {
+      const payload = (await res.json()) as { message?: string }
+      if (payload?.message) message = payload.message
+    } catch {
+      // ignore
+    }
+    throw new Error(message)
+  }
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `comprobante-${numeroComprobante}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 
 /** Lookup público: la tasa de IVA vive en Farmacia y la usamos para previsualizar. */

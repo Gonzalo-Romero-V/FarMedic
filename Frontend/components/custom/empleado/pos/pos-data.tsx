@@ -82,6 +82,7 @@ export function PosData() {
           items={cart.items}
           ivaTasa={ivaTasa}
           onSetCantidad={cart.setCantidad}
+          onSetDescuento={cart.setDescuento}
           onRemove={cart.removeItem}
         />
 

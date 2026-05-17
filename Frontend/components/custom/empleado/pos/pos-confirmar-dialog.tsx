@@ -70,6 +70,7 @@ export function PosConfirmarDialog({
         items: items.map((it) => ({
           medicamento_id: it.medicamento.id,
           cantidad: it.cantidad,
+          ...(it.descuento > 0 ? { descuento_item: it.descuento } : {}),
         })),
       })
       toast.success(`Venta ${venta.numero_comprobante} registrada`)
@@ -101,6 +102,12 @@ export function PosConfirmarDialog({
         <div className="flex flex-col gap-4">
           <div className="rounded-md border bg-muted/40 p-3 text-sm">
             <Row label="Items" value={`${items.length}`} />
+            {totales.descuentos > 0 && (
+              <>
+                <Row label="Bruto" value={`$${totales.bruto.toFixed(2)}`} />
+                <Row label="Descuentos" value={`−$${totales.descuentos.toFixed(2)}`} />
+              </>
+            )}
             <Row label="Subtotal" value={`$${totales.subtotal.toFixed(2)}`} />
             <Row label={`IVA (${ivaTasa.toFixed(2)}%)`} value={`$${totales.impuesto.toFixed(2)}`} />
             <div className="mt-2 flex items-center justify-between border-t pt-2 font-semibold">

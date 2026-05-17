@@ -1,10 +1,12 @@
 "use client"
 
-import { Minus, Plus, Trash2 } from "lucide-react"
+import { Minus, Percent, Plus, Trash2 } from "lucide-react"
+import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 import { calcularTotales, type CartItem } from "./use-pos"
 
@@ -12,11 +14,19 @@ type Props = {
   items: CartItem[]
   ivaTasa: number
   onSetCantidad: (medicamentoId: number, cantidad: number) => void
+  onSetDescuento: (medicamentoId: number, descuento: number) => void
   onRemove: (medicamentoId: number) => void
 }
 
-export function PosCart({ items, ivaTasa, onSetCantidad, onRemove }: Props) {
-  const { subtotal, impuesto, total } = calcularTotales(items, ivaTasa)
+export function PosCart({
+  items,
+  ivaTasa,
+  onSetCantidad,
+  onSetDescuento,
+  onRemove,
+}: Props) {
+  const { bruto, descuentos, subtotal, impuesto, total } = calcularTotales(items, ivaTasa)
+  const [editandoDescuento, setEditandoDescuento] = useState<number | null>(null)
 
   return (
     <div className="flex flex-col">
@@ -31,7 +41,9 @@ export function PosCart({ items, ivaTasa, onSetCantidad, onRemove }: Props) {
       ) : (
         <ul className="divide-y">
           {items.map((it) => {
-            const subtotalItem = it.medicamento.precio * it.cantidad
+            const brutoItem = it.medicamento.precio * it.cantidad
+            const netoItem = Math.max(0, brutoItem - it.descuento)
+            const mostrarEditor = editandoDescuento === it.medicamento.id || it.descuento > 0
             return (
               <li key={it.medicamento.id} className="flex flex-col gap-2 px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
@@ -92,10 +104,70 @@ export function PosCart({ items, ivaTasa, onSetCantidad, onRemove }: Props) {
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
-                  <span className="text-sm tabular-nums font-medium">
-                    ${subtotalItem.toFixed(2)}
-                  </span>
+                  <div className="flex flex-col items-end gap-0.5">
+                    {it.descuento > 0 && (
+                      <span className="text-[10px] tabular-nums text-muted-foreground line-through">
+                        ${brutoItem.toFixed(2)}
+                      </span>
+                    )}
+                    <span className="text-sm tabular-nums font-medium">
+                      ${netoItem.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
+
+                {mostrarEditor ? (
+                  <div className="flex items-center gap-2">
+                    <Label
+                      htmlFor={`desc-${it.medicamento.id}`}
+                      className="text-xs text-muted-foreground"
+                    >
+                      Descuento
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        $
+                      </span>
+                      <Input
+                        id={`desc-${it.medicamento.id}`}
+                        type="number"
+                        min={0}
+                        max={brutoItem}
+                        step="0.01"
+                        value={it.descuento || ""}
+                        placeholder="0.00"
+                        onChange={(e) =>
+                          onSetDescuento(it.medicamento.id, Number(e.target.value) || 0)
+                        }
+                        onBlur={() => {
+                          if (it.descuento === 0) setEditandoDescuento(null)
+                        }}
+                        className="h-7 w-24 pl-5 text-right tabular-nums"
+                      />
+                    </div>
+                    {it.descuento > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSetDescuento(it.medicamento.id, 0)
+                          setEditandoDescuento(null)
+                        }}
+                        className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                      >
+                        Quitar
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditandoDescuento(it.medicamento.id)}
+                    className="inline-flex items-center self-start gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Percent className="h-3 w-3" />
+                    Agregar descuento
+                  </button>
+                )}
               </li>
             )
           })}
@@ -104,6 +176,12 @@ export function PosCart({ items, ivaTasa, onSetCantidad, onRemove }: Props) {
 
       {items.length > 0 && (
         <div className="border-t bg-muted/40 px-4 py-3 text-sm">
+          {descuentos > 0 && (
+            <>
+              <Row label="Bruto" value={bruto} />
+              <Row label="Descuentos" value={-descuentos} />
+            </>
+          )}
           <Row label="Subtotal" value={subtotal} />
           <Row label={`IVA (${ivaTasa.toFixed(2)}%)`} value={impuesto} />
           <div className="mt-2 flex items-center justify-between border-t pt-2 font-semibold">
@@ -117,10 +195,13 @@ export function PosCart({ items, ivaTasa, onSetCantidad, onRemove }: Props) {
 }
 
 function Row({ label, value }: { label: string; value: number }) {
+  const signo = value < 0 ? "−" : ""
   return (
     <div className="flex items-center justify-between text-muted-foreground">
       <span>{label}</span>
-      <span className="tabular-nums">${value.toFixed(2)}</span>
+      <span className="tabular-nums">
+        {signo}${Math.abs(value).toFixed(2)}
+      </span>
     </div>
   )
 }

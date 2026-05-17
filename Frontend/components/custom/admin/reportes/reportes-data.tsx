@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, FileText } from "lucide-react"
+import { Download, FileText, TrendingUp } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -193,6 +193,63 @@ function ReportePreview({ data }: { data: ReporteMensual }) {
                 </div>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Productos más vendidos
+          </CardTitle>
+          <CardDescription>
+            Top 10 por unidades vendidas en el período (RF-13).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.top_productos.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Sin ventas registradas en el período.
+            </p>
+          ) : (
+            <div className="overflow-hidden rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">#</th>
+                    <th className="px-3 py-2 text-left">Medicamento</th>
+                    <th className="px-3 py-2 text-right">Unidades</th>
+                    <th className="px-3 py-2 text-right">Ventas</th>
+                    <th className="px-3 py-2 text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.top_productos.map((p, i) => (
+                    <tr key={p.medicamento_id} className="border-t">
+                      <td className="px-3 py-2 text-muted-foreground tabular-nums">
+                        {i + 1}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="font-medium">{p.nombre_comercial}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {p.principio_activo}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {asNum(p.unidades)}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {p.ventas_distintas}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {USD.format(asNum(p.monto))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>

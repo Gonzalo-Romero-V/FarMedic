@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(functi
     // POS — Ventas (alta y consulta)
     Route::get('ventas', [VentaController::class, 'index']);
     Route::get('ventas/{venta}', [VentaController::class, 'show']);
+    Route::get('ventas/{venta}/comprobante.pdf', [VentaController::class, 'comprobantePdf']);
     Route::post('ventas', [VentaController::class, 'store']);
 
     // Pedidos — gestión de estado

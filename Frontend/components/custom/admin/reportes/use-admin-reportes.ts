@@ -37,6 +37,14 @@ export type ReporteMensual = {
       total: string | number
     }>
   }
+  top_productos: Array<{
+    medicamento_id: number
+    nombre_comercial: string
+    principio_activo: string
+    unidades: number | string
+    monto: number | string
+    ventas_distintas: number
+  }>
   stock_critico: Array<{
     sucursal: string
     items: Array<{

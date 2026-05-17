@@ -176,6 +176,37 @@
         </table>
     @endif
 
+    {{-- ============================ Top productos ============================ --}}
+    <h2>Productos más vendidos</h2>
+    @if(empty($top_productos))
+        <p class="empty">Sin ventas registradas en el período.</p>
+    @else
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medicamento</th>
+                    <th>Principio activo</th>
+                    <th class="num">Unidades</th>
+                    <th class="num">Ventas</th>
+                    <th class="num">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($top_productos as $i => $row)
+                    <tr>
+                        <td class="muted">{{ $i + 1 }}</td>
+                        <td>{{ $row->nombre_comercial }}</td>
+                        <td class="muted">{{ $row->principio_activo }}</td>
+                        <td class="num">{{ $row->unidades }}</td>
+                        <td class="num">{{ $row->ventas_distintas }}</td>
+                        <td class="num">${{ number_format($row->monto, 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
     {{-- ============================ Stock crítico ============================ --}}
     <h2>Stock crítico al cierre del período</h2>
     @if(empty($stock_critico))

@@ -1,6 +1,8 @@
 "use client"
 
-import { Printer } from "lucide-react"
+import { Download, Printer } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,13 +13,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-import type { VentaResponse } from "./use-pos"
+import { descargarComprobantePdf, type VentaResponse } from "./use-pos"
 
 /**
- * Comprobante imprimible (placeholder de RF-08; el PDF real queda para otra tanda).
- * Usa `window.print()` con CSS `@media print` que oculta el chrome y muestra solo
- * el contenido del comprobante. Se imprime la página completa con `print:hidden`
- * en todo menos el contenedor con id="pos-comprobante-printable".
+ * Comprobante post-venta: preview imprimible + descarga PDF (RF-08).
+ * El PDF se genera server-side (Blade + dompdf, `GET /api/ventas/{id}/comprobante.pdf`).
+ * `window.print()` queda como atajo para impresión directa sin pasar por el PDF.
  */
 
 type Props = {
@@ -33,9 +34,23 @@ function asNum(v: string | number | null | undefined): number {
 }
 
 export function PosComprobanteDialog({ open, onOpenChange, venta, onCerrar }: Props) {
+  const [descargando, setDescargando] = useState(false)
+
   if (!venta) return null
 
   const fecha = new Date(venta.fecha)
+
+  const handleDescargar = async () => {
+    setDescargando(true)
+    try {
+      await descargarComprobantePdf(venta.id, venta.numero_comprobante)
+      toast.success("Comprobante descargado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al descargar")
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <Dialog
@@ -122,9 +137,13 @@ export function PosComprobanteDialog({ open, onOpenChange, venta, onCerrar }: Pr
           <Button variant="outline" onClick={onCerrar}>
             Cerrar
           </Button>
-          <Button onClick={() => window.print()}>
+          <Button variant="outline" onClick={() => window.print()}>
             <Printer className="mr-1.5 h-3.5 w-3.5" />
             Imprimir
+          </Button>
+          <Button onClick={handleDescargar} disabled={descargando}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {descargando ? "Generando…" : "Descargar PDF"}
           </Button>
         </DialogFooter>
       </DialogContent>
