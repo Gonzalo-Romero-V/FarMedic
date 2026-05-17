@@ -8,6 +8,7 @@ import { PasswordSection } from "@/components/custom/perfil/_shared/password-sec
 import { useSelfProfile } from "@/components/custom/perfil/_shared/use-self-profile"
 
 import { AdminAccountCard } from "./account-card"
+import { FarmaciaConfigSection } from "./farmacia-config-section"
 
 export function AdminPerfilData() {
   const { user, updateProfile, updatePassword, savingProfile, savingPassword } =
@@ -33,6 +34,7 @@ export function AdminPerfilData() {
           }
         />
         <PasswordSection loading={savingPassword} onSubmit={updatePassword} />
+        <FarmaciaConfigSection />
       </div>
       <div className="flex flex-col gap-4">
         <AdminAccountCard
