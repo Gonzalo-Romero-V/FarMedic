@@ -90,4 +90,48 @@ class UsuarioController extends Controller
         $usuario->update(['activo' => false]);
         return response()->noContent();
     }
+
+    /**
+     * Cambio de rol explícito (admin-only por ruta).
+     *
+     * Reglas (domain/usuario.md + intent/roles.md):
+     *   - administrador/empleado exigen `sucursal_id`. cliente la limpia (siempre NULL).
+     *   - No se puede dejar al sistema sin administradores activos: si el usuario
+     *     era admin y la operación lo saca de admin, debe haber al menos otro admin
+     *     activo distinto.
+     */
+    public function cambiarRol(Request $request, Usuario $usuario)
+    {
+        $validated = $request->validate([
+            'rol_id' => ['required', 'exists:roles,id'],
+            'sucursal_id' => ['nullable', 'exists:sucursales,id'],
+        ]);
+
+        $rolNuevo = Rol::findOrFail($validated['rol_id']);
+        $rolActual = $usuario->rol;
+
+        if (in_array($rolNuevo->nombre, ['administrador', 'empleado']) && empty($validated['sucursal_id'])) {
+            abort(422, "sucursal_id es obligatoria para rol {$rolNuevo->nombre}");
+        }
+
+        // Si el usuario es admin y la operación lo saca de admin, garantizar que
+        // queda al menos otro admin activo distinto.
+        if ($rolActual?->nombre === 'administrador' && $rolNuevo->nombre !== 'administrador') {
+            $otrosAdmins = Usuario::administradores()
+                ->where('activo', true)
+                ->where('id', '!=', $usuario->id)
+                ->count();
+            abort_if($otrosAdmins === 0, 422, 'No se puede quitar el rol administrador: es el último admin activo');
+        }
+
+        $updates = ['rol_id' => $rolNuevo->id];
+        if ($rolNuevo->nombre === 'cliente') {
+            $updates['sucursal_id'] = null;
+        } elseif (!empty($validated['sucursal_id'])) {
+            $updates['sucursal_id'] = $validated['sucursal_id'];
+        }
+
+        $usuario->update($updates);
+        return $usuario->load('rol', 'sucursal');
+    }
 }

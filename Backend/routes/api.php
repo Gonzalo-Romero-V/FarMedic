@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\ProveedorController;
 use App\Http\Controllers\Api\RecetaController;
+use App\Http\Controllers\Api\ReportesController;
 use App\Http\Controllers\Api\RolController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\UsuarioController;
@@ -130,6 +131,7 @@ Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
     Route::get('usuarios', [UsuarioController::class, 'index']);
     Route::post('usuarios', [UsuarioController::class, 'store']);
     Route::delete('usuarios/{usuario}', [UsuarioController::class, 'destroy']);
+    Route::patch('usuarios/{usuario}/rol', [UsuarioController::class, 'cambiarRol']);
 
     // Categorías (escritura)
     Route::post('categorias', [CategoriaController::class, 'store']);
@@ -154,4 +156,8 @@ Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
     // Ajuste manual de stock (solo admin — corrección administrativa, no operación
     // del flujo de venta/recepción). Split de ruta vs /movimientos-stock estándar.
     Route::post('movimientos-stock/ajuste', [MovimientoStockController::class, 'ajustar']);
+
+    // Reportes mensuales (RNF-03 — admin-only). JSON preview + descarga PDF.
+    Route::get('admin/reportes/mensual', [ReportesController::class, 'mensual']);
+    Route::get('admin/reportes/mensual.pdf', [ReportesController::class, 'mensualPdf']);
 });

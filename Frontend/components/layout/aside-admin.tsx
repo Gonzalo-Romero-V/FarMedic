@@ -13,7 +13,7 @@ export const adminNavLinks: readonly NavLink[] = [
   { href: "/admin/catalogo", label: "Catálogo" },
   { href: "/admin/inventario", label: "Inventario", matchPrefix: "/admin/inventario" },
   { href: "/admin/reportes", label: "Reportes" },
-  { href: "/admin/auditoria", label: "Auditoría" },
+  // { href: "/admin/auditoria", label: "Auditoría" }, // oculto hasta tener la implementación
 ]
 
 export function AsideAdmin() {

@@ -15,6 +15,8 @@ class Sucursal extends Model
         'nombre',
         'ciudad',
         'direccion',
+        'latitud',
+        'longitud',
         'telefono',
         'activa',
     ];
@@ -23,6 +25,8 @@ class Sucursal extends Model
     {
         return [
             'activa' => 'boolean',
+            'latitud' => 'decimal:7',
+            'longitud' => 'decimal:7',
         ];
     }
 

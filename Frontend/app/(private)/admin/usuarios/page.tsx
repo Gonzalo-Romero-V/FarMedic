@@ -1,17 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { UsuariosData } from "@/components/custom/admin/usuarios/usuarios-data"
 
 export default function AdminUsuariosPage() {
   return (
-    <PagePlaceholder
-      title="Usuarios"
-      subtitle="Administradores y empleados de cada sucursal. Clientes se gestionan en sus pedidos."
-      todos={[
-        "Listado con filtro por rol y sucursal",
-        "Alta de administrador o empleado",
-        "Asignación de sucursal",
-        "Cambio de rol (requiere autorización admin)",
-        "Activar / desactivar usuario",
-      ]}
-    />
+    <div className="flex flex-col gap-4 p-4">
+      <div>
+        <h1 className="h2">Usuarios</h1>
+        <p className="text-sm text-muted-foreground">
+          Administradores, empleados y clientes. El ícono de escudo abre el diálogo para cambiar rol.
+        </p>
+      </div>
+      <UsuariosData />
+    </div>
   )
 }

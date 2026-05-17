@@ -31,6 +31,8 @@ class SucursalController extends Controller
             'nombre' => ['required', 'string', 'max:255'],
             'ciudad' => ['required', 'string', 'max:100'],
             'direccion' => ['required', 'string', 'max:255'],
+            'latitud' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitud' => ['nullable', 'numeric', 'between:-180,180'],
             'telefono' => ['required', 'string', 'max:50'],
             'activa' => ['boolean'],
         ]);
@@ -48,6 +50,8 @@ class SucursalController extends Controller
             'nombre' => ['sometimes', 'string', 'max:255'],
             'ciudad' => ['sometimes', 'string', 'max:100'],
             'direccion' => ['sometimes', 'string', 'max:255'],
+            'latitud' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'longitud' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'telefono' => ['sometimes', 'string', 'max:50'],
             'activa' => ['sometimes', 'boolean'],
         ]);

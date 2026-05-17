@@ -1,11 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { ReportesData } from "@/components/custom/admin/reportes/reportes-data"
 
 export default function AdminReportesPage() {
   return (
-    <PagePlaceholder
-      title="Reportes"
-      subtitle="Reportes estratégicos del negocio (RNF-03 — solo administrador)."
-      todos={["Ventas por período", "Stock crítico", "Lotes vencidos", "Comparativa entre sucursales"]}
-    />
+    <div className="flex flex-col gap-4 p-4">
+      <div>
+        <h1 className="h2">Reportes</h1>
+        <p className="text-sm text-muted-foreground">
+          Generá un PDF mensual totalizado y por sucursal: ventas, stock crítico al cierre y resumen de Kardex.
+        </p>
+      </div>
+      <ReportesData />
+    </div>
   )
 }
