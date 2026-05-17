@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\FarmaciaController;
@@ -60,6 +61,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pedidos', [PedidoController::class, 'index']);
     Route::get('pedidos/{pedido}', [PedidoController::class, 'show']);
     Route::post('pedidos', [PedidoController::class, 'store']);
+
+    // Cliente — dashboard + catálogo navegable + stock por sucursal. dashboard hace
+    // abort_unless(esCliente()) en el controller; catalogo/stock son consultables por
+    // cualquier autenticado (admin/empleado pueden ver la vista cliente sin friction).
+    Route::get('cliente/dashboard', [ClienteController::class, 'dashboard']);
+    Route::get('cliente/catalogo', [ClienteController::class, 'catalogo']);
+    Route::get('cliente/medicamentos/{medicamento}/stock-por-sucursal', [ClienteController::class, 'stockPorSucursal']);
 
     // Usuario: show de sí mismo + update (admin o self — refinar con policy)
     Route::get('usuarios/{usuario}', [UsuarioController::class, 'show']);

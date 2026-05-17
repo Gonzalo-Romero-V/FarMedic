@@ -1,15 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { PedidosData } from "@/components/custom/cliente/pedidos/pedidos-data"
 
 export default function ClientePedidosPage() {
   return (
-    <PagePlaceholder
-      title="Mis pedidos"
-      subtitle="Pedidos online creados por vos."
-      todos={[
-        "Listado: en curso / entregados / cancelados",
-        "Click → detalle del pedido",
-        "Seguimiento del estado",
-      ]}
-    />
+    <div className="flex flex-col gap-4 p-4">
+      <div>
+        <h1 className="h2">Mis pedidos</h1>
+        <p className="text-sm text-muted-foreground">
+          Pedidos online creados por vos. Filtralos por estado y consultá el detalle.
+        </p>
+      </div>
+      <PedidosData />
+    </div>
   )
 }

@@ -1,16 +1,15 @@
-import { PagePlaceholder } from "@/components/custom/page-placeholder"
+import { ClienteDashboardData } from "@/components/custom/cliente/dashboard/cliente-dashboard-data"
 
 export default function ClienteDashboardPage() {
   return (
-    <PagePlaceholder
-      title="Hola 👋"
-      subtitle="Resumen de tu actividad en FarMedic."
-      todos={[
-        "Pedidos en curso",
-        "Últimas compras",
-        "Recomendaciones (productos comprados antes)",
-        "Acceso rápido al catálogo",
-      ]}
-    />
+    <div className="flex flex-col gap-6 p-4">
+      <div>
+        <h1 className="h2">Mi cuenta</h1>
+        <p className="text-sm text-muted-foreground">
+          Resumen de tus pedidos y acceso rápido al catálogo.
+        </p>
+      </div>
+      <ClienteDashboardData />
+    </div>
   )
 }

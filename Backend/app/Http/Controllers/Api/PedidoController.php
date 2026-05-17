@@ -9,6 +9,8 @@ use App\Models\Medicamento;
 use App\Models\MovimientoStock;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Models\Sucursal;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,34 +20,55 @@ use Illuminate\Support\Facades\DB;
  *   No descuenta stock todavía: lo hace cuando pasa a 'entregado'.
  * - cambiarEstado(): pendiente→en_camino→entregado→(stock descontado);
  *   cancelado revierte si ya había movimientos.
+ *
+ * `cliente_id` no se acepta del body — viene de auth()->user(). Refuerza que un
+ * cliente solo pueda crear pedidos a su propio nombre. `index/show` filtran
+ * automáticamente por cliente cuando el rol del user lo es (alineado a [[rbac]]
+ * permiso `orders.read.own`).
  */
 class PedidoController extends Controller
 {
     public function index(Request $request)
     {
-        $q = Pedido::with(['items.medicamento', 'cliente', 'gestor']);
-        if ($request->filled('sucursal_id')) {
-            $q->where('sucursal_id', $request->sucursal_id);
+        $user = $request->user();
+
+        $q = Pedido::with(['items.medicamento', 'cliente', 'gestor', 'sucursal']);
+
+        // Cliente: solo SUS pedidos. Admin/empleado: ven todos y pueden filtrar.
+        if ($user->esCliente()) {
+            $q->where('cliente_id', $user->id);
+        } else {
+            if ($request->filled('cliente_id')) {
+                $q->where('cliente_id', $request->cliente_id);
+            }
+            if ($request->filled('sucursal_id')) {
+                $q->where('sucursal_id', $request->sucursal_id);
+            }
         }
-        if ($request->filled('cliente_id')) {
-            $q->where('cliente_id', $request->cliente_id);
-        }
+
         if ($request->filled('estado')) {
             $q->where('estado', $request->estado);
         }
-        return $q->orderBy('fecha_solicitud')->paginate($request->integer('per_page', 25));
+
+        return $q->orderByDesc('fecha_solicitud')->paginate($request->integer('per_page', 25));
     }
 
-    public function show(Pedido $pedido)
+    public function show(Request $request, Pedido $pedido)
     {
-        return $pedido->load(['items.medicamento', 'items.lote', 'cliente', 'gestor', 'receta']);
+        $user = $request->user();
+        if ($user->esCliente() && $pedido->cliente_id !== $user->id) {
+            abort(403, 'Pedido de otro cliente');
+        }
+        return $pedido->load(['items.medicamento', 'items.lote', 'cliente', 'gestor', 'receta', 'sucursal']);
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        abort_unless($user->esCliente(), 403, 'Solo clientes pueden crear pedidos');
+
         $validated = $request->validate([
             'sucursal_id' => ['required', 'exists:sucursales,id'],
-            'cliente_id' => ['required', 'exists:usuarios,id'],
             'receta_id' => ['nullable', 'exists:recetas,id'],
             'tipo_entrega' => ['required', 'in:retiro_local,domicilio'],
             'direccion_envio' => ['required_if:tipo_entrega,domicilio', 'nullable', 'string', 'max:255'],
@@ -55,7 +78,11 @@ class PedidoController extends Controller
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        // La sucursal elegida debe estar activa (cliente no debe poder pedir a sucursal cerrada).
+        $sucursalActiva = Sucursal::where('id', $validated['sucursal_id'])->where('activa', true)->exists();
+        abort_unless($sucursalActiva, 422, 'Sucursal no disponible para pedidos');
+
+        return DB::transaction(function () use ($validated, $user) {
             $sucursalId = $validated['sucursal_id'];
             $ivaTasa = Farmacia::value('iva_tasa');
 
@@ -70,15 +97,19 @@ class PedidoController extends Controller
 
             foreach ($validated['items'] as $i) {
                 $med = Medicamento::findOrFail($i['medicamento_id']);
+                abort_if($med->sucursal_id !== $sucursalId, 422, "Medicamento {$med->id} no pertenece a la sucursal elegida");
+
                 $restante = $i['cantidad'];
 
                 // FEFO + reserva: asignamos lote pero NO descontamos cantidad_actual aún
-                // (solo se descuenta al pasar a 'entregado')
+                // (solo se descuenta al pasar a 'entregado'). lockForUpdate para evitar
+                // que dos pedidos reserven el mismo stock concurrentemente.
                 $lotes = Lote::where('medicamento_id', $med->id)
                     ->where('sucursal_id', $sucursalId)
                     ->where('cantidad_actual', '>', 0)
                     ->where('fecha_vencimiento', '>=', now()->toDateString())
                     ->orderBy('fecha_vencimiento')
+                    ->lockForUpdate()
                     ->get();
 
                 $totalDisponible = $lotes->sum('cantidad_actual');
@@ -105,9 +136,9 @@ class PedidoController extends Controller
 
             $pedido = Pedido::create([
                 'sucursal_id' => $sucursalId,
-                'cliente_id' => $validated['cliente_id'],
+                'cliente_id' => $user->id,
                 'receta_id' => $validated['receta_id'] ?? null,
-                'numero_pedido' => 'P-' . now()->format('YmdHis') . '-' . random_int(100, 999),
+                'numero_pedido' => $this->siguientePedido($sucursalId),
                 'tipo_entrega' => $validated['tipo_entrega'],
                 'direccion_envio' => $validated['direccion_envio'] ?? null,
                 'telefono_contacto' => $validated['telefono_contacto'],
@@ -124,25 +155,30 @@ class PedidoController extends Controller
                 PedidoItem::create($item);
             }
 
-            return $pedido->load('items.medicamento');
+            return $pedido->load(['items.medicamento', 'items.lote', 'sucursal', 'cliente', 'receta']);
         });
     }
 
     /**
      * Transición de estado del pedido. Genera movimientos al pasar a 'entregado'
-     * y los revierte si se cancela tras estar entregado.
+     * y los revierte si se cancela tras estar entregado. Admin+empleado por ruta.
      */
     public function cambiarEstado(Request $request, Pedido $pedido)
     {
+        $user = $request->user();
+
+        // Empleado solo puede gestionar pedidos de su sucursal.
+        if ($user->esEmpleado() && $pedido->sucursal_id !== $user->sucursal_id) {
+            abort(403, 'Pedido de otra sucursal');
+        }
+
         $validated = $request->validate([
             'estado' => ['required', 'in:pendiente,en_camino,entregado,cancelado'],
-            'usuario_id_gestor' => ['nullable', 'exists:usuarios,id'],
         ]);
 
         $nuevo = $validated['estado'];
         $previo = $pedido->estado;
 
-        // Validaciones de transición
         $transicionesValidas = [
             'pendiente' => ['en_camino', 'cancelado'],
             'en_camino' => ['entregado', 'cancelado'],
@@ -153,11 +189,8 @@ class PedidoController extends Controller
             abort(409, "Transición inválida: {$previo} -> {$nuevo}");
         }
 
-        return DB::transaction(function () use ($pedido, $nuevo, $previo, $validated) {
-            $updates = ['estado' => $nuevo];
-            if (!empty($validated['usuario_id_gestor'])) {
-                $updates['usuario_id_gestor'] = $validated['usuario_id_gestor'];
-            }
+        return DB::transaction(function () use ($pedido, $nuevo, $previo, $user) {
+            $updates = ['estado' => $nuevo, 'usuario_id_gestor' => $user->id];
 
             if ($nuevo === 'en_camino') {
                 $updates['fecha_envio'] = now();
@@ -165,7 +198,6 @@ class PedidoController extends Controller
 
             if ($nuevo === 'entregado') {
                 $updates['fecha_entrega'] = now();
-                // Descontar stock real ahora
                 foreach ($pedido->items as $item) {
                     if (!$item->lote_id) continue;
                     $lote = $item->lote()->lockForUpdate()->first();
@@ -178,7 +210,7 @@ class PedidoController extends Controller
                     MovimientoStock::create([
                         'lote_id' => $lote->id,
                         'sucursal_id' => $pedido->sucursal_id,
-                        'usuario_id' => $validated['usuario_id_gestor'] ?? null,
+                        'usuario_id' => $user->id,
                         'tipo' => 'venta',
                         'cantidad' => -$item->cantidad,
                         'referencia_tipo' => Pedido::class,
@@ -188,7 +220,6 @@ class PedidoController extends Controller
             }
 
             if ($nuevo === 'cancelado' && $previo === 'entregado') {
-                // Revertir movimientos
                 foreach ($pedido->items as $item) {
                     if (!$item->lote_id) continue;
                     $lote = $item->lote()->lockForUpdate()->first();
@@ -198,7 +229,7 @@ class PedidoController extends Controller
                     MovimientoStock::create([
                         'lote_id' => $lote->id,
                         'sucursal_id' => $pedido->sucursal_id,
-                        'usuario_id' => $validated['usuario_id_gestor'] ?? null,
+                        'usuario_id' => $user->id,
                         'tipo' => 'devolucion_cliente',
                         'cantidad' => $item->cantidad,
                         'referencia_tipo' => Pedido::class,
@@ -209,7 +240,22 @@ class PedidoController extends Controller
             }
 
             $pedido->update($updates);
-            return $pedido->load('items');
+            return $pedido->load(['items.medicamento', 'items.lote']);
         });
+    }
+
+    /**
+     * Serial autoincremental zero-padded por sucursal (mismo patrón que VentaController).
+     * lockForUpdate serializa la generación dentro de la transacción del store.
+     */
+    private function siguientePedido(int $sucursalId): string
+    {
+        $ultimo = Pedido::where('sucursal_id', $sucursalId)
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->value('numero_pedido');
+
+        $n = $ultimo ? ((int) $ultimo) + 1 : 1;
+        return str_pad((string) $n, 7, '0', STR_PAD_LEFT);
     }
 }
