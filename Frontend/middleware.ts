@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { isRole } from "@/lib/permissions"
-import { homeForRole, roleFromPathname } from "@/lib/permissions/role-routes"
+import { isRole, homeForRole, roleFromPathname } from "@/lib/permissions/role-routes"
 
 const TOKEN_COOKIE = "auth_token"
 const ROLE_COOKIE = "auth_role"
