@@ -60,5 +60,7 @@ class DatabaseSeeder extends Seeder
                 'activo' => true,
             ]
         );
+
+        $this->call(CatalogoSeeder::class);
     }
 }
