@@ -20,7 +20,7 @@ const ROLE_COOKIE = "auth_role"
  * token en cada request. Este middleware solo evita pantallazos
  * inconsistentes de UI.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(TOKEN_COOKIE)?.value
   const rawRole = request.cookies.get(ROLE_COOKIE)?.value
