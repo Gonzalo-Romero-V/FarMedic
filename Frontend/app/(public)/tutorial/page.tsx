@@ -6,10 +6,10 @@ const ROLES = [
     color: "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900",
     badge: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
     steps: [
-      { icon: <Search className="h-4 w-4" />, title: "Explorá el catálogo", desc: "Ingresá a /catalogo sin necesidad de cuenta. Filtrá por categoría o buscá por nombre del medicamento." },
-      { icon: <UserPlus className="h-4 w-4" />, title: "Creá tu cuenta", desc: "Registrate con tu email o con Google. En segundos tenés acceso a tu panel de pedidos." },
-      { icon: <ShoppingCart className="h-4 w-4" />, title: "Hacé un pedido", desc: "Elegí los medicamentos, confirmá las cantidades y enviá el pedido. Recibirás un número de seguimiento." },
-      { icon: <ClipboardList className="h-4 w-4" />, title: "Seguí tu pedido", desc: "En Mi cuenta → Pedidos podés ver el estado actualizado: pendiente, en camino o entregado." },
+      { icon: <Search className="h-4 w-4" />, title: "Explora el catálogo", desc: "Ingresa a /catalogo sin necesidad de cuenta. Filtra por categoría o busca por nombre del medicamento." },
+      { icon: <UserPlus className="h-4 w-4" />, title: "Crea tu cuenta", desc: "Regístrate con tu email o con Google. En segundos tienes acceso a tu panel de pedidos." },
+      { icon: <ShoppingCart className="h-4 w-4" />, title: "Realiza un pedido", desc: "Elige los medicamentos, confirma las cantidades y envía el pedido. Recibirás un número de seguimiento." },
+      { icon: <ClipboardList className="h-4 w-4" />, title: "Sigue tu pedido", desc: "En Mi cuenta → Pedidos puedes ver el estado actualizado: pendiente, en camino o entregado." },
     ],
   },
   {
@@ -17,10 +17,10 @@ const ROLES = [
     color: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900",
     badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
     steps: [
-      { icon: <LogIn className="h-4 w-4" />, title: "Accedé con tu cuenta", desc: "El administrador crea tu usuario. Iniciá sesión y serás redirigido a tu panel de empleado." },
-      { icon: <ScanBarcode className="h-4 w-4" />, title: "Usá el POS", desc: "En Punto de Venta buscá el medicamento por nombre o código de barras, ajustá cantidades y procesá el cobro." },
-      { icon: <FileText className="h-4 w-4" />, title: "Emitir comprobante", desc: "Al completar la venta, el sistema genera un comprobante PDF descargable para el cliente." },
-      { icon: <Bell className="h-4 w-4" />, title: "Gestioná pedidos online", desc: "En la sección Pedidos atendé los pedidos entrantes del canal online y actualizá su estado." },
+      { icon: <LogIn className="h-4 w-4" />, title: "Accede con tu cuenta", desc: "El administrador crea tu usuario. Inicia sesión y serás redirigido a tu panel de empleado." },
+      { icon: <ScanBarcode className="h-4 w-4" />, title: "Usa el POS", desc: "En Punto de Venta busca el medicamento por nombre o código de barras, ajusta cantidades y procesa el cobro." },
+      { icon: <FileText className="h-4 w-4" />, title: "Emite el comprobante", desc: "Al completar la venta, el sistema genera un comprobante PDF descargable para el cliente." },
+      { icon: <Bell className="h-4 w-4" />, title: "Gestiona pedidos online", desc: "En la sección Pedidos atiende los pedidos entrantes del canal online y actualiza su estado." },
     ],
   },
   {
@@ -28,10 +28,10 @@ const ROLES = [
     color: "bg-violet-50 border-violet-200 dark:bg-violet-950/30 dark:border-violet-900",
     badge: "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300",
     steps: [
-      { icon: <Layers className="h-4 w-4" />, title: "Configurá tu farmacia", desc: "En Configuración cargá el nombre, RUC, logo y tasa de IVA de tu farmacia." },
-      { icon: <Package className="h-4 w-4" />, title: "Gestioná el inventario", desc: "Ingresá medicamentos, registrá lotes con fechas de vencimiento y recibí alertas automáticas de caducidad." },
-      { icon: <Users className="h-4 w-4" />, title: "Administrá usuarios", desc: "Creá cuentas de empleados, asignales una sucursal y gestioná permisos desde el panel de usuarios." },
-      { icon: <BarChart3 className="h-4 w-4" />, title: "Revisá los reportes", desc: "Accedé a ventas del período, top 10 productos y kardex completo por sucursal para tomar decisiones." },
+      { icon: <Layers className="h-4 w-4" />, title: "Configura tu farmacia", desc: "En Configuración ingresa el nombre, RUC, logo y tasa de IVA de tu farmacia." },
+      { icon: <Package className="h-4 w-4" />, title: "Gestiona el inventario", desc: "Registra medicamentos y lotes con fechas de vencimiento. Recibe alertas automáticas de caducidad." },
+      { icon: <Users className="h-4 w-4" />, title: "Administra usuarios", desc: "Crea cuentas de empleados, asígnalos a una sucursal y gestiona permisos desde el panel de usuarios." },
+      { icon: <BarChart3 className="h-4 w-4" />, title: "Revisa los reportes", desc: "Accede a ventas del período, top 10 productos y kardex completo por sucursal para tomar decisiones." },
     ],
   },
 ]
@@ -44,7 +44,7 @@ export default function TutorialPage() {
       <div className="text-center space-y-3">
         <h1 className="h1 text-foreground">¿Cómo usar FarMedic?</h1>
         <p className="body text-muted-foreground max-w-xl mx-auto">
-          Guía rápida según tu rol en el sistema. Encontrá los pasos para empezar en minutos.
+          Guía rápida según tu rol en el sistema. Encuentra los pasos para empezar en minutos.
         </p>
       </div>
 
@@ -84,9 +84,9 @@ export default function TutorialPage() {
 
       {/* CTA */}
       <div className="rounded-lg border bg-card p-8 text-center space-y-3">
-        <h2 className="h3 text-foreground">¿Listo para empezar?</h2>
+        <h2 className="h3 text-foreground">¿Listo para comenzar?</h2>
         <p className="small text-muted-foreground">
-          Accedé al sistema o explorá el catálogo sin necesidad de cuenta.
+          Accede al sistema o explora el catálogo sin necesidad de cuenta.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <a href="/login" className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">

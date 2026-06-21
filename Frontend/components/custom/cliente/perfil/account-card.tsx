@@ -35,7 +35,7 @@ export function ClienteAccountCard({ nombre, email, miembroDesde }: Props) {
       </div>
       <p className="text-xs text-muted-foreground">
         {miembroDesde
-          ? `Sos parte de FarMedic desde ${DATE_FMT.format(new Date(miembroDesde))}.`
+          ? `Eres parte de FarMedic desde ${DATE_FMT.format(new Date(miembroDesde))}.`
           : "Bienvenido a FarMedic."}
       </p>
     </div>
