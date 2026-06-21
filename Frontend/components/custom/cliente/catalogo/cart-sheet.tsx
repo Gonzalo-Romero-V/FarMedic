@@ -67,7 +67,7 @@ export function CartSheet({
             <SheetTitle>Tu carrito</SheetTitle>
             <SheetDescription>
               {items.length === 0
-                ? "Está vacío — agregá productos desde el catálogo."
+                ? "Está vacío — agrega productos desde el catálogo."
                 : `${totalItems} producto${totalItems === 1 ? "" : "s"} para confirmar.`}
             </SheetDescription>
           </SheetHeader>

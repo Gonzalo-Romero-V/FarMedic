@@ -6,7 +6,7 @@ export default function ClientePedidosPage() {
       <div>
         <h1 className="h2">Mis pedidos</h1>
         <p className="text-sm text-muted-foreground">
-          Pedidos online creados por vos. Filtralos por estado y consultá el detalle.
+          Pedidos online creados por ti. Fíltralos por estado y consulta el detalle.
         </p>
       </div>
       <PedidosData />

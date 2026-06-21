@@ -34,7 +34,7 @@ export function PosSearch({ onAdd }: Props) {
       <div className="rounded-lg border bg-card">
         {state.status === "idle" && (
           <div className="p-6 text-center text-sm text-muted-foreground">
-            Empezá a escribir para ver resultados.
+            Empieza a escribir para ver resultados.
           </div>
         )}
 

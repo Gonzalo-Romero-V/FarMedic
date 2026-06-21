@@ -120,7 +120,7 @@ export function CheckoutDialog({
         <DialogHeader>
           <DialogTitle>Confirmar pedido</DialogTitle>
           <DialogDescription>
-            Elegí dónde retirarlo o que te lo enviemos. La sucursal valida stock al confirmar.
+            Elige dónde retirarlo o que te lo enviemos. La sucursal valida el stock al confirmar.
           </DialogDescription>
         </DialogHeader>
 

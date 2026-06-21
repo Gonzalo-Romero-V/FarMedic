@@ -6,7 +6,7 @@ export default function EmpleadoPedidosPage() {
       <div>
         <h1 className="h2">Pedidos online</h1>
         <p className="text-sm text-muted-foreground">
-          Despachá los pedidos del canal online. Solo podés gestionar los de tu
+          Despacha los pedidos del canal online. Solo puedes gestionar los de tu
           sucursal: pendiente → en camino → entregado.
         </p>
       </div>

@@ -6,7 +6,7 @@ export default function ClienteCatalogoPage() {
       <div>
         <h1 className="h2">Catálogo</h1>
         <p className="text-sm text-muted-foreground">
-          Explorá medicamentos disponibles. Agregá al carrito y confirmá tu pedido.
+          Explora medicamentos disponibles. Agrega al carrito y confirma tu pedido.
         </p>
       </div>
       <CatalogoData />

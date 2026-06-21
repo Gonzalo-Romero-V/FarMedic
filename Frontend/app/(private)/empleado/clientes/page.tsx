@@ -6,7 +6,7 @@ export default function EmpleadoClientesPage() {
       <div>
         <h1 className="h2">Clientes</h1>
         <p className="text-sm text-muted-foreground">
-          Clientes registrados. Buscá por nombre o email y revisá su historial.
+          Clientes registrados. Busca por nombre o email y revisa su historial.
         </p>
       </div>
       <ClientesData />

@@ -44,9 +44,9 @@ export function ClienteDashboardData() {
           <CardContent className="flex flex-col items-start gap-3">
             <ShoppingBag className="h-8 w-8 text-primary" />
             <div>
-              <h3 className="h4">¿Necesitás algo más?</h3>
+              <h3 className="h4">¿Necesitas algo más?</h3>
               <p className="xs text-muted-foreground">
-                Revisá el catálogo y armá un nuevo pedido en minutos.
+                Revisa el catálogo y arma un nuevo pedido en minutos.
               </p>
             </div>
             <Button asChild className="w-full">

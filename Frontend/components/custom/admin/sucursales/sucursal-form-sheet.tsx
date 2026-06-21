@@ -211,7 +211,7 @@ export function SucursalFormSheet({
           <SheetTitle>{isEdit ? "Editar sucursal" : "Nueva sucursal"}</SheetTitle>
           <SheetDescription>
             Datos generales + coordenadas para mostrar en el mapa.
-            Hacé click en el mapa para fijar lat/lng visualmente.
+            Haz clic en el mapa para fijar lat/lng visualmente.
           </SheetDescription>
         </SheetHeader>
 

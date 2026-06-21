@@ -1,6 +1,6 @@
 # Cómo interactúo con el sistema de grafo semántico
 
-Este documento describe **cómo vos, desarrollador, operás el sistema vault-sync**. Es la única referencia que necesitás para el día a día.
+Este documento describe **cómo tú, desarrollador, operas el sistema vault-sync**. Es la única referencia que necesitas para el día a día.
 
 ---
 
@@ -34,7 +34,7 @@ Este documento describe **cómo vos, desarrollador, operás el sistema vault-syn
 
 ### `/sync` — después de cada commit aprobado
 
-El git hook ya generó `change_report.json` automáticamente. Vos ejecutás:
+El git hook ya generó `change_report.json` automáticamente. Tú ejecutas:
 
 ```
 /sync
@@ -44,7 +44,7 @@ Claude:
 1. Lee el reporte
 2. Identifica qué notas del vault deben actualizarse
 3. **Te muestra la propuesta**
-4. Vos aprobás (o pedís ajustes)
+4. Tú apruebas (o pides ajustes)
 5. El script aplica
 
 Si el commit fue solo H5 (refactor de implementación), la propuesta puede ser **0 cambios al vault**. Eso está bien.
@@ -62,23 +62,23 @@ Claude corre los chequeos deterministas + analiza coherencia semántica entre ca
 - 🟡 **Drift** — algo en el vault sin reflejo en código (o al revés)
 - 🟢 **Coherente** — todo OK
 
-**`/check` no resuelve nada solo.** Reporta y vos decidís.
+**`/check` no resuelve nada solo.** Reporta y tú decides.
 
 ### `/ingest <ruta>` — agregaste un documento nuevo
 
-Cuando dropeás un PDF, .txt o imagen en `vault/raw/`:
+Cuando agregas un PDF, .txt o imagen en `vault/raw/`:
 
 ```
 /ingest raw/nuevo-documento.pdf
 ```
 
-Claude lee el contenido, extrae conceptos, propone agregar/enriquecer notas. Vos aprobás.
+Claude lee el contenido, extrae conceptos, propone agregar/enriquecer notas. Tú apruebas.
 
 ### `/snapshot` — solo en momentos especiales
 
 - Al iniciar un proyecto nuevo
 - Después de un refactor masivo
-- Cuando sospechás que el grafo perdió sincronía con el código
+- Cuando sospechas que el grafo perdió sincronía con el código
 
 ```
 /snapshot
@@ -111,12 +111,12 @@ python scripts/vault_sync.py apply .vault-sync/proposed-changes.json
 
 ## Reglas que el sistema respeta SIEMPRE
 
-1. **Nunca** modifica notas con `status: locked`. Si tu `/sync` propone tocar una, abortá vos.
+1. **Nunca** modifica notas con `status: locked`. Si tu `/sync` propone tocar una, cancélala tú.
 2. **Nunca** borra una nota. Como mucho, la marca `deprecated`.
-3. **Nunca** sobrescribe el cuerpo entero de una nota. Solo: setea frontmatter, agrega secciones.
+3. **Nunca** sobrescribe el cuerpo entero de una nota. Solo: configura el frontmatter y agrega secciones.
 4. **Idempotente**: aplicar el mismo `changes.json` dos veces no produce cambios duplicados.
 5. **Falla ruidosa**: si algo no cuadra, aborta y loguea. No adivina.
-6. **Logs en `.vault-sync/sync.log`**: revisá ahí cuándo dudes qué pasó.
+6. **Logs en `.vault-sync/sync.log`**: revisa ahí cuando dudes qué pasó.
 
 ---
 
@@ -126,7 +126,7 @@ python scripts/vault_sync.py apply .vault-sync/proposed-changes.json
 |----------|-------------|-------------------|
 | `draft` | Borrador | Claude libremente |
 | `stable` | Activa | Claude solo `code_path` y secciones append |
-| `locked` | Inmutable | Solo vos manualmente |
+| `locked` | Inmutable | Solo tú manualmente |
 | `deprecated` | Obsoleta, queda como histórico | Nadie la actualiza |
 
 ---
@@ -134,8 +134,8 @@ python scripts/vault_sync.py apply .vault-sync/proposed-changes.json
 ## Flujo cotidiano completo
 
 ```
-1. Codeás un cambio
-2. Me pedís commit → te muestro mensaje → aprobás
+1. Codificas un cambio
+2. Me pides un commit → te muestro el mensaje → apruebas
 3. git commit (post-commit hook genera change_report.json)
 4. Si el cambio amerita actualizar vault → /sync
 5. Reviso propuesta de Claude
@@ -150,13 +150,13 @@ python scripts/vault_sync.py apply .vault-sync/proposed-changes.json
 
 ## Replicar este sistema en otro proyecto
 
-Copiá a la raíz del nuevo proyecto:
+Copia a la raíz del nuevo proyecto:
 - `scripts/` (la carpeta entera)
 - `.claude/commands/` (los 4 skills)
 - `.git/hooks/post-commit`
-- `vault_sync.config.json` (ajustá `vault_path`, `project_name`, mapeos)
-- `CLAUDE.md` (ajustá referencias)
+- `vault_sync.config.json` (ajusta `vault_path`, `project_name`, mapeos)
+- `CLAUDE.md` (ajusta referencias)
 - `USAGE.md` (este archivo)
 
-Creá el vault Obsidian con: `INDEX.md`, `intent/`, `domain/`, `decisions/`, `raw/`.
-Corré `python scripts/vault_sync.py status` para verificar que todo arranca.
+Crea el vault Obsidian con: `INDEX.md`, `intent/`, `domain/`, `decisions/`, `raw/`.
+Ejecuta `python scripts/vault_sync.py status` para verificar que todo arranca.

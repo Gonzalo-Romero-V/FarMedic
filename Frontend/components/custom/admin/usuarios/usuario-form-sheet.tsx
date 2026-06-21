@@ -211,7 +211,7 @@ export function UsuarioFormSheet({ usuario, open: openProp, onOpenChange, onSave
           <SheetTitle>{isEdit ? "Editar usuario" : "Nuevo usuario"}</SheetTitle>
           <SheetDescription>
             {isEdit
-              ? "Modifica datos generales. Para cambiar el rol usá el ícono de escudo en la tabla."
+              ? "Modifica datos generales. Para cambiar el rol usa el ícono de escudo en la tabla."
               : "El rol determina si requiere sucursal asignada."}
           </SheetDescription>
         </SheetHeader>

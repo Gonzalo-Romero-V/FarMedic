@@ -36,7 +36,7 @@ export function RecetaBlock({ recetaId, onRecetaCreada, onLimpiar }: Props) {
 
   const handleSubmit = async () => {
     if (!numero.trim() && !imagen) {
-      toast.error("Cargá un número de receta o subí la imagen")
+      toast.error("Carga un número de receta o sube la imagen")
       return
     }
     setSubmitting(true)
@@ -72,7 +72,7 @@ export function RecetaBlock({ recetaId, onRecetaCreada, onLimpiar }: Props) {
             Receta requerida
           </div>
           <div className="text-xs text-amber-800/80 dark:text-amber-200/80">
-            Tu carrito contiene productos con receta obligatoria. Adjuntá número o imagen.
+            Tu carrito contiene productos con receta obligatoria. Adjunta número o imagen.
           </div>
         </div>
       </div>

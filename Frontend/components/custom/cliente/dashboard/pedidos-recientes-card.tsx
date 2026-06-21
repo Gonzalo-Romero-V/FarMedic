@@ -52,7 +52,7 @@ export function PedidosRecientesCard({ items }: Props) {
           </ul>
         ) : items.length === 0 ? (
           <p className="py-6 text-center text-muted-foreground">
-            Aún no hiciste pedidos. <Link href="/cliente/catalogo" className="text-primary underline">Explorá el catálogo</Link>.
+            Aún no hiciste pedidos. <Link href="/cliente/catalogo" className="text-primary underline">Explora el catálogo</Link>.
           </p>
         ) : (
           <ul className="divide-y divide-border">

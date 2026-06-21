@@ -72,7 +72,7 @@ export function ReportesData() {
             Reporte mensual
           </CardTitle>
           <CardDescription>
-            Elegí el mes y descargá el PDF totalizado + por sucursal.
+            Elige el mes y descarga el PDF totalizado + por sucursal.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -123,7 +123,7 @@ export function MedicamentoAltaSheet({ sucursales, categorias, proveedores, onCr
         <SheetHeader>
           <SheetTitle>Nuevo medicamento</SheetTitle>
           <SheetDescription>
-            Alta del producto en el catálogo. El stock no se setea acá — se carga después con lotes.
+            Alta del producto en el catálogo. El stock no se configura aquí — se carga después con lotes.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>

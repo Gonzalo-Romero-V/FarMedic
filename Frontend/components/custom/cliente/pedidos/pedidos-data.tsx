@@ -86,7 +86,7 @@ export function PedidosData() {
         </div>
       ) : !data || data.data.length === 0 ? (
         <div className="rounded-md border bg-card p-8 text-center text-sm text-muted-foreground">
-          Aún no tenés pedidos. <Link href="/cliente/catalogo" className="text-primary underline">Explorá el catálogo</Link>.
+          Aún no tienes pedidos. <Link href="/cliente/catalogo" className="text-primary underline">Explora el catálogo</Link>.
         </div>
       ) : (
         <div className="flex flex-col gap-2">

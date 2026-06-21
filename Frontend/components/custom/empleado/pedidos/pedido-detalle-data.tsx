@@ -174,7 +174,7 @@ export function PedidoDetalleData({ id }: Props) {
       {ajenoASucursal && (
         <Alert>
           <AlertDescription>
-            Este pedido pertenece a otra sucursal. Solo podés ver el detalle; los
+            Este pedido pertenece a otra sucursal. Solo puedes ver el detalle; los
             cambios de estado los realiza la sucursal asignada.
           </AlertDescription>
         </Alert>

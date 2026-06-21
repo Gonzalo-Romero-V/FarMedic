@@ -6,7 +6,7 @@ export default function AdminReportesPage() {
       <div>
         <h1 className="h2">Reportes</h1>
         <p className="text-sm text-muted-foreground">
-          Generá un PDF mensual totalizado y por sucursal: ventas, stock crítico al cierre y resumen de Kardex.
+          Genera un PDF mensual totalizado y por sucursal: ventas, stock crítico al cierre y resumen de Kardex.
         </p>
       </div>
       <ReportesData />

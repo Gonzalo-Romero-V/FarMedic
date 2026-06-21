@@ -95,7 +95,7 @@ export function PosConfirmarDialog({
         <DialogHeader>
           <DialogTitle>Confirmar venta</DialogTitle>
           <DialogDescription>
-            Elegí el método de pago. El descuento de stock es automático (FEFO).
+            Elige el método de pago. El descuento de stock es automático (FEFO).
           </DialogDescription>
         </DialogHeader>
 
@@ -146,7 +146,7 @@ export function PosConfirmarDialog({
 
           {bloqueado && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-              Adjuntá una receta antes de confirmar.
+              Adjunta una receta antes de confirmar.
             </div>
           )}
         </div>

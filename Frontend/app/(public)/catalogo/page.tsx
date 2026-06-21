@@ -6,7 +6,7 @@ export default function CatalogoPublicoPage() {
       <div>
         <h1 className="h2">Catálogo</h1>
         <p className="text-sm text-muted-foreground">
-          Explorá los medicamentos disponibles. Para hacer pedidos, iniciá sesión.
+          Explora los medicamentos disponibles. Para hacer pedidos, inicia sesión.
         </p>
       </div>
       <CatalogoPublicoData />

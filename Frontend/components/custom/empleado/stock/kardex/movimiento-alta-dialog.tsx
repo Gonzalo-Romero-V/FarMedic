@@ -218,7 +218,7 @@ export function MovimientoAltaDialog({ medicamentos, onCreated }: Props) {
                         <SelectValue
                           placeholder={
                             !watchedMedicamentoId
-                              ? "Elegí primero un medicamento"
+                              ? "Elige primero un medicamento"
                               : loadingLotes
                                 ? "Cargando lotes..."
                                 : lotes.length === 0

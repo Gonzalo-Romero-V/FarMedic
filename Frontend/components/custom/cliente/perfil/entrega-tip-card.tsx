@@ -8,7 +8,7 @@ export function EntregaTipCard() {
         <p className="font-medium">¿Cómo se usan tu teléfono y dirección?</p>
         <p className="text-xs text-muted-foreground">
           Se cargan automáticamente al confirmar un pedido a domicilio para
-          ahorrarte tipear, pero podés sobreescribirlos en cada checkout. Los
+          ahorrarte digitar, pero puedes sobrescribirlos en cada checkout. Los
           datos solo se comparten con la sucursal que prepara tu pedido.
         </p>
       </div>

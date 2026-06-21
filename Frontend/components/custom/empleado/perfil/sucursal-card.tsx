@@ -18,7 +18,7 @@ export function SucursalCard({ sucursal }: Props) {
           Tu sucursal
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          No tenés una sucursal asignada. Pedile a un administrador que te
+          No tienes una sucursal asignada. Pídele a un administrador que te
           asigne una.
         </p>
       </div>
