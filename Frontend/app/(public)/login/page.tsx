@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -15,7 +15,7 @@ import { homeForRole, isRole } from "@/lib/permissions"
 
 type AuthMode = "login" | "register"
 
-export default function AuthPage() {
+function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, token, isLoading: isAuthLoading } = useAuth()
@@ -264,5 +264,17 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <AuthForm />
+    </Suspense>
   )
 }
