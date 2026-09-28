@@ -3,7 +3,7 @@
 Sistema web de gestión para farmacias: inventario, POS y pedidos online.
 Multi-sucursal. Ecuador / USD.
 
-> **Fuente de verdad**: vault Obsidian en `__farmedic__db__backup/FarMedic/`. Este archivo es un snapshot.
+> **Fuente de verdad**: vault Obsidian en `vault/` (dentro de este repo). Este archivo es un snapshot.
 
 ---
 

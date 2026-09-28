@@ -14,7 +14,7 @@ El código (H4–H5) refleja al vault (H1–H3), nunca al revés.
 Toda sesión nueva, antes de la primera respuesta no-trivial, debe:
 
 1. **Leer este archivo completo** — ya estás acá, sigamos.
-2. **Leer `vault/INDEX.md`** (`C:\Users\Gonzalo\Dev\__databases\__farmedic__db__backup\FarMedic\INDEX.md`).
+2. **Leer `vault/INDEX.md`** (dentro de este mismo repo).
 3. **Identificar la tarea** y consultar la tabla de abajo para saber qué notas leer.
 4. **Leer SOLO esas notas** — no leer el vault completo, no inventar.
 5. **Recién entonces** explorar código del repo.
@@ -120,7 +120,7 @@ Más detalle en `USAGE.md` (cara dev) y `vault/SYSTEM.md` (cara agente).
 
 ### Vault y código
 
-- **Vault**: `C:\Users\Gonzalo\Dev\__databases\__farmedic__db__backup\FarMedic`
+- **Vault**: `vault/` (dentro de este repo — versionado junto al código, ya no vive en una carpeta externa)
 - **Sistema vault-sync**: `vault/SYSTEM.md` (locked, leer una vez)
 - **Manual de uso humano**: `USAGE.md`
 - **Engine determinista**: `scripts/vault_sync.py` (0 deps)
@@ -144,6 +144,7 @@ FarMedic/
 ├── Frontend/                ← Next.js 16  (AGENTS.md propio)
 ├── Backend/                 ← Laravel 13
 ├── Docs/                    ← READMEs snapshot
+├── vault/                   ← vault Obsidian (fuente de verdad semántica, versionado)
 ├── scripts/                 ← vault_sync engine (Python, 0 deps)
 ├── .claude/commands/        ← /snapshot /sync /ingest /check
 ├── .git/hooks/post-commit   ← genera change_report automáticamente

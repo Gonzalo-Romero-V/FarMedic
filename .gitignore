@@ -46,6 +46,12 @@ scripts/**/__pycache__/
 scripts/**/*.pyc
 
 # ============================================================
+# VAULT (Obsidian) — estado local de UI, no versionado
+# ============================================================
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+
+# ============================================================
 # OS / EDITOR
 # ============================================================
 .DS_Store

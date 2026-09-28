@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "project_name": "FarMedic",
-  "vault_path": "C:/Users/Gonzalo/Dev/__databases/__farmedic__db__backup/FarMedic",
+  "vault_path": "vault",
   "hierarchy_mapping": {
     "H1_intent": [
       "vault/intent/**"
