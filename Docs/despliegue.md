@@ -140,8 +140,15 @@ El seeder crea automáticamente:
 | Admin | `admin@farmedic.local` / `FarMedic2026!` |
 | Categorías | 8 categorías farmacéuticas |
 | Proveedores | Difare S.A. · DYVENPRO · Leterago del Ecuador |
-| Medicamentos | 76 en Matriz · ~38 en Sucursal Guano |
-| Lotes | 1 lote inicial por medicamento · mix de vigentes, próximos a vencer y 2 vencidos |
+| Medicamentos | 76 en Matriz · ~33 en Sucursal Guano (catálogo, **sin stock**) |
+
+`db:seed` (que corre en cada deploy) **no crea lotes**. El stock de demostración es opcional y se carga a mano:
+
+```bash
+php artisan db:seed --class=LotesDemoSeeder   # 1 lote por medicamento + su movimiento 'ingreso' en el Kardex
+```
+
+Incluye lotes vigentes, próximos a vencer y vencidos. Es idempotente (omite medicamentos que ya tienen lotes).
 
 ---
 
@@ -161,6 +168,19 @@ Lotes de prueba incluidos intencionalmente:
 - `FM-202501-006` vence `2026-09-30` → **próximo a vencer** (~90 días)
 - `FM-202503-018` vence `2026-08-31` → **próximo a vencer** (~60 días)
 - `FM-202412-020` vence `2026-04-30` → **vencido** (para probar alertas)
+
+---
+
+## Reseteo operativo (punto cero con catálogo)
+
+Deja el sistema sin datos transaccionales pero con roles, farmacia, sucursales, admin, categorías, proveedores y medicamentos (sin lotes ni stock).
+
+```bash
+php artisan migrate:fresh --seed --force
+```
+
+**Destruye todos los datos** (ventas, pedidos, lotes, movimientos, usuarios distintos del admin, tokens). Después hay que rotar la contraseña del admin.
+En producción se ejecuta contra Neon desde una máquina con acceso (variables `DB_*` de Neon en el entorno) o desde el Shell de Render; Vercel no interviene. Hacer un `pg_dump` antes.
 
 ---
 

@@ -9,7 +9,6 @@ use App\Models\Proveedor;
 use App\Models\Sucursal;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class CatalogoSeeder extends Seeder
 {
@@ -21,7 +20,8 @@ class CatalogoSeeder extends Seeder
      *   YYYYMM  = año-mes de fabricación aproximado (vencimiento − 2 años)
      *   NNN     = secuencia de 3 dígitos, única dentro del prefijo
      *
-     * Lotes de prueba incluidos deliberadamente:
+     * Este seeder solo carga catálogo (sin lotes ni stock). Los lotes de demo
+     * viven en LotesDemoSeeder, que se ejecuta manualmente. Lotes de prueba:
      *   - "2026-09-30" → próximo a vencer en ~90 días (alerta amarilla)
      *   - "2026-08-31" → próximo a vencer en ~60 días (alerta amarilla)
      *   - "2026-04-30" → ya vencido (alerta roja, para probar kardex)
@@ -83,7 +83,45 @@ class CatalogoSeeder extends Seeder
         // en_guano = true → el medicamento también se carga en Sucursal Guano
         // Lote Guano: mismo número pero prefijo FG en lugar de FM
 
-        $catalogo = [
+        $catalogo = self::catalogo();
+
+        foreach ([$matriz, $guano] as $sucursal) {
+            $esGuano = $sucursal->id === $guano->id;
+
+            foreach ($catalogo as $row) {
+                [$nombre, $principio, $precio, $stockMin, $ubicacion, $receta,
+                 $catKey, $provKey, , , , , $enGuano] = $row;
+
+                if ($esGuano && !$enGuano) {
+                    continue;
+                }
+
+                Medicamento::firstOrCreate(
+                    ['sucursal_id' => $sucursal->id, 'nombre_comercial' => $nombre],
+                    [
+                        'categoria_id'     => $cats[$catKey]->id,
+                        'proveedor_id'     => $provs[$provKey]->id,
+                        'principio_activo' => $principio,
+                        'precio'           => $precio,
+                        'stock_minimo'     => $stockMin,
+                        'ubicacion_fisica' => $ubicacion,
+                        'requiere_receta'  => $receta,
+                        'activo'           => true,
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * Catálogo base. Las columnas de lote (lote_num … lote_costo) solo las
+     * consume LotesDemoSeeder; este seeder NO crea lotes ni stock.
+     *
+     * @return array<int, array>
+     */
+    public static function catalogo(): array
+    {
+        return [
             // ── ANALGÉSICOS Y ANTIPIRÉTICOS ──────────────────────────────────
             ['Paracetamol 500 mg tab x10',        'Acetaminofén',                   0.35, 50, 'A1', false, 'Analgésicos y Antipiréticos', 'Difare S.A.',          'FM-202501-001', '2027-01-31', 500, 0.18, true],
             ['Paracetamol 1 g tab x10',            'Acetaminofén',                   0.55, 30, 'A1', false, 'Analgésicos y Antipiréticos', 'Difare S.A.',          'FM-202501-002', '2027-03-31', 300, 0.28, true],
@@ -176,55 +214,5 @@ class CatalogoSeeder extends Seeder
             ['Permetrina 1% loción 60 ml',          'Permetrina',                     5.50,  5, 'H4', false, 'Dermatología', 'Difare S.A.',          'FM-202502-075', '2027-06-30',  40, 2.75, false],
             ['Miconazol 2% polvo 40 g',             'Miconazol nitrato',               3.20, 10, 'H4', false, 'Dermatología', 'DYVENPRO Cía. Ltda.', 'FM-202503-076', '2028-02-28',  60, 1.60, false],
         ];
-
-        $now = now()->toDateTimeString();
-
-        foreach ([$matriz, $guano] as $sucursal) {
-            $esGuano = $sucursal->id === $guano->id;
-            $prefix  = $esGuano ? 'FG' : 'FM';
-
-            foreach ($catalogo as $row) {
-                [$nombre, $principio, $precio, $stockMin, $ubicacion, $receta,
-                 $catKey, $provKey, $loteNum, $loteVenc, $loteCant, $loteCosto, $enGuano] = $row;
-
-                if ($esGuano && !$enGuano) {
-                    continue;
-                }
-
-                $med = Medicamento::firstOrCreate(
-                    ['sucursal_id' => $sucursal->id, 'nombre_comercial' => $nombre],
-                    [
-                        'categoria_id'     => $cats[$catKey]->id,
-                        'proveedor_id'     => $provs[$provKey]->id,
-                        'principio_activo' => $principio,
-                        'precio'           => $precio,
-                        'stock_minimo'     => $stockMin,
-                        'ubicacion_fisica' => $ubicacion,
-                        'requiere_receta'  => $receta,
-                        'activo'           => true,
-                    ]
-                );
-
-                // Crear el lote inicial solo si el medicamento aún no tiene ninguno.
-                // En re-ejecuciones del seeder se omite para no duplicar stock.
-                if ($med->lotes()->doesntExist()) {
-                    $loteNumSucursal = str_replace('FM-', $prefix . '-', $loteNum);
-
-                    DB::table('lotes')->insert([
-                        'medicamento_id'    => $med->id,
-                        'sucursal_id'       => $sucursal->id,
-                        'proveedor_id'      => $provs[$provKey]->id,
-                        'numero_lote'       => $loteNumSucursal,
-                        'fecha_vencimiento' => $loteVenc,
-                        'fecha_ingreso'     => now()->subMonths(2)->toDateString(),
-                        'cantidad_inicial'  => $loteCant,
-                        'cantidad_actual'   => $loteCant,
-                        'costo_unitario'    => $loteCosto,
-                        'created_at'        => $now,
-                        'updated_at'        => $now,
-                    ]);
-                }
-            }
-        }
     }
 }
