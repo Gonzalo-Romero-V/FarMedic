@@ -1,15 +1,15 @@
 # FarMedic — Credenciales de acceso
 
-> **Advertencia**: este archivo contiene credenciales de desarrollo/demo.
-> No commitear credenciales reales de producción aquí.
+> **Este archivo no contiene contraseñas.** Las contraseñas se definen por variables de entorno
+> (`Backend/.env`, y el panel de Environment en Render) y nunca se versionan.
 
 ---
 
-## Usuarios del sistema (seeded)
+## Usuarios del sistema (sembrados)
 
-| Rol | Email | Password | Propósito |
-|-----|-------|----------|-----------|
-| **Administrador** | `admin@farmedic.local` | `FarMedic2026!` | Acceso total: catálogo, usuarios, sucursales, POS, reportes |
+| Rol | Email | Contraseña | Propósito |
+|-----|-------|------------|-----------|
+| **Administrador** | `admin@farmedic.local` | variable `SEED_ADMIN_PASSWORD` (si falta, el admin no se crea) | Acceso total: catálogo, usuarios, sucursales, POS, reportes |
 | **Empleado** | *(crear vía panel Admin)* | — | POS y gestión de inventario |
 | **Cliente** | *(registro libre o Google OAuth)* | — | Catálogo y pedidos online |
 

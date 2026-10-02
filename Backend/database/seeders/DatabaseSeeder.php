@@ -46,20 +46,26 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Admin inicial — credenciales de dev (rotar en producción).
-        // Ver vault/decisions/auth.md sección "Credenciales de desarrollo".
-        Usuario::firstOrCreate(
-            ['email' => 'admin@farmedic.local'],
-            [
-                'rol_id' => 1,
-                'sucursal_id' => $sucursal->id,
-                'nombre' => 'Admin FarMedic',
-                'password' => Hash::make('FarMedic2026!'),
-                'telefono' => null,
-                'direccion' => null,
-                'activo' => true,
-            ]
-        );
+        // Admin inicial. La contraseña viene de SEED_ADMIN_PASSWORD (config/admin_inicial.php);
+        // no hay valor por defecto. firstOrCreate no pisa la contraseña de un admin existente,
+        // así que rotarla en el entorno desplegado persiste entre deploys.
+        $passwordAdmin = config('admin_inicial.password');
+        if ($passwordAdmin) {
+            Usuario::firstOrCreate(
+                ['email' => 'admin@farmedic.local'],
+                [
+                    'rol_id' => 1,
+                    'sucursal_id' => $sucursal->id,
+                    'nombre' => 'Admin FarMedic',
+                    'password' => Hash::make($passwordAdmin),
+                    'telefono' => null,
+                    'direccion' => null,
+                    'activo' => true,
+                ]
+            );
+        } elseif (! Usuario::where('email', 'admin@farmedic.local')->exists()) {
+            $this->command?->warn('Admin inicial no creado: define SEED_ADMIN_PASSWORD.');
+        }
 
         $this->call(CatalogoSeeder::class);
         $this->call(CuentasPruebaSeeder::class);

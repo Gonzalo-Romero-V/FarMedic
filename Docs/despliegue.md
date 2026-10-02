@@ -33,7 +33,7 @@ Configurar en Render → Environment → Environment Variables:
 APP_NAME=FarMedic
 APP_ENV=production
 APP_DEBUG=false
-APP_KEY=base64:7FTnG3ftZ7bAI0ogtvMAdqZgbV29DJd1Wv5rTMaxQos=
+APP_KEY=<definir en el entorno>
 APP_URL=https://farmedic.onrender.com
 
 APP_LOCALE=es
@@ -44,11 +44,11 @@ LOG_CHANNEL=stderr
 LOG_LEVEL=error
 
 DB_CONNECTION=pgsql
-DB_HOST=ep-summer-boat-ac93nkbb.sa-east-1.aws.neon.tech
+DB_HOST=<definir en el entorno>
 DB_PORT=5432
 DB_DATABASE=neondb
-DB_USERNAME=neondb_owner
-DB_PASSWORD=npg_J71jkTmRsYLG
+DB_USERNAME=<definir en el entorno>
+DB_PASSWORD=<definir en el entorno>
 DB_SSLMODE=require
 
 SESSION_DRIVER=database
@@ -137,7 +137,7 @@ El seeder crea automáticamente:
 | Roles | administrador · empleado · cliente |
 | Farmacia | FarMedic (RUC 1791234567001) |
 | Sucursales | Matriz (Riobamba) · Sucursal Guano |
-| Admin | `admin@farmedic.local` / `FarMedic2026!` |
+| Admin | `admin@farmedic.local` / contraseña de `SEED_ADMIN_PASSWORD` (variable de entorno) |
 | Categorías | 8 categorías farmacéuticas |
 | Proveedores | Difare S.A. · DYVENPRO · Leterago del Ecuador |
 | Medicamentos | 76 en Matriz · ~33 en Sucursal Guano (catálogo, **sin stock**) |
