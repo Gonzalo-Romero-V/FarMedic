@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ContactoEntregaResource;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
@@ -61,9 +62,22 @@ class UsuarioController extends Controller
         return $usuario->load('rol', 'sucursal');
     }
 
-    public function show(Usuario $usuario)
+    /**
+     * RS-02. Administrador y propietario: registro completo. Empleado: solo
+     * nombre/teléfono/dirección de un cliente con pedido activo a domicilio en su
+     * sucursal. Cualquier otro caso → 403.
+     */
+    public function show(Request $request, Usuario $usuario)
     {
-        return $usuario->load('rol', 'sucursal');
+        $actor = $request->user();
+
+        if (Gate::forUser($actor)->allows('view', $usuario)) {
+            return $usuario->load('rol', 'sucursal');
+        }
+
+        Gate::forUser($actor)->authorize('verContactoEntrega', $usuario);
+
+        return new ContactoEntregaResource($usuario);
     }
 
     /**
