@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'activo' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
 
         // IP real del cliente tras el proxy del hosting (la usan los límites de RS-06 y RS-08).

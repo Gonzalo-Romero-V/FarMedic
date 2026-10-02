@@ -127,6 +127,9 @@ class UsuarioController extends Controller
         }
         // Cambio de rol: endpoint separado (PATCH /usuarios/{usuario}/rol, solo admin).
         $usuario->update($validated);
+        if (($validated['activo'] ?? true) === false) {
+            $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
+        }
         return $usuario->load('rol', 'sucursal');
     }
 
@@ -134,6 +137,7 @@ class UsuarioController extends Controller
     {
         // Soft-deactivation. No se elimina físicamente para preservar ventas/pedidos históricos.
         $usuario->update(['activo' => false]);
+        $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
         return response()->noContent();
     }
 

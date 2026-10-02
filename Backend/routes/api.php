@@ -47,7 +47,7 @@ Route::get('medicamentos', [MedicamentoController::class, 'index']);
 Route::get('medicamentos/{medicamento}', [MedicamentoController::class, 'show']);
 
 // ============== REQUIERE TOKEN (cualquier rol activo) ==============
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'activo'])->group(function () {
     Route::get('/user', fn (Request $r) => $r->user()->load('rol', 'sucursal'));
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::put('auth/me', [AuthController::class, 'updateMe']);
@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ============== ADMIN + EMPLEADO ==============
-Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(function () {
+Route::middleware(['auth:sanctum', 'activo', 'role:administrador,empleado'])->group(function () {
     // Inventario y Kardex
     Route::get('lotes', [LoteController::class, 'index']);
     Route::get('lotes/{lote}', [LoteController::class, 'show']);
@@ -114,7 +114,7 @@ Route::middleware(['auth:sanctum', 'role:administrador,empleado'])->group(functi
 });
 
 // ============== ADMIN ONLY ==============
-Route::middleware(['auth:sanctum', 'role:administrador'])->group(function () {
+Route::middleware(['auth:sanctum', 'activo', 'role:administrador'])->group(function () {
     // Dashboard agregado (KPIs + secciones para Frontend/app/(private)/admin/dashboard)
     Route::get('admin/dashboard', [DashboardController::class, 'admin']);
 
