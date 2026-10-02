@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -65,21 +66,52 @@ class UsuarioController extends Controller
         return $usuario->load('rol', 'sucursal');
     }
 
+    /**
+     * RS-01. Administrador: edita cualquier usuario, y la contraseña solo de otros
+     * (la propia va por /auth/me/password). Propietario no administrador: solo su
+     * registro y solo nombre, teléfono y dirección (esta última solo cliente);
+     * cualquier intento de tocar correo, contraseña, sucursal, rol o estado → 403.
+     */
     public function update(Request $request, Usuario $usuario)
     {
-        $validated = $request->validate([
+        Gate::authorize('update', $usuario);
+
+        $actor = $request->user();
+
+        $rules = [
             'nombre' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'max:255', 'unique:usuarios,email,' . $usuario->id],
-            'password' => ['sometimes', 'string', 'min:8'],
             'telefono' => ['sometimes', 'nullable', 'string', 'max:50'],
             'direccion' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'sucursal_id' => ['sometimes', 'nullable', 'exists:sucursales,id'],
-            'activo' => ['sometimes', 'boolean'],
-        ]);
+        ];
+
+        if ($actor->esAdministrador()) {
+            $rules += [
+                'email' => ['sometimes', 'email', 'max:255', 'unique:usuarios,email,' . $usuario->id],
+                'password' => ['sometimes', 'string', 'min:8'],
+                'sucursal_id' => ['sometimes', 'nullable', 'exists:sucursales,id'],
+                'activo' => ['sometimes', 'boolean'],
+            ];
+            abort_if(
+                $request->has('password') && $actor->id === $usuario->id,
+                403,
+                'La contraseña propia se cambia en /api/auth/me/password'
+            );
+        } else {
+            $prohibidos = array_values(array_intersect(
+                ['email', 'password', 'sucursal_id', 'rol_id', 'activo'],
+                array_keys($request->all())
+            ));
+            abort_if($prohibidos !== [], 403, 'Campos reservados al administrador: ' . implode(', ', $prohibidos));
+            if (! $actor->esCliente()) {
+                unset($rules['direccion']);
+            }
+        }
+
+        $validated = $request->validate($rules);
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
-        // Cambio de rol requiere endpoint separado o admin con permisos especiales (no expuesto aquí).
+        // Cambio de rol: endpoint separado (PATCH /usuarios/{usuario}/rol, solo admin).
         $usuario->update($validated);
         return $usuario->load('rol', 'sucursal');
     }
