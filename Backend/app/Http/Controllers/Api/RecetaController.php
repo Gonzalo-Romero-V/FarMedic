@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Receta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Recetas son metadata + opcionalmente una imagen. Solo create + show — una vez creadas
@@ -45,6 +46,8 @@ class RecetaController extends Controller
 
     public function show(Receta $receta)
     {
+        Gate::authorize('view', $receta);
+
         return $receta->load(['venta', 'pedido']);
     }
 }
