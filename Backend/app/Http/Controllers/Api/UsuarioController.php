@@ -125,9 +125,14 @@ class UsuarioController extends Controller
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
+        $desactiva = ($validated['activo'] ?? true) === false;
+        if ($desactiva) {
+            $this->protegerUltimoAdmin($usuario);
+        }
+
         // Cambio de rol: endpoint separado (PATCH /usuarios/{usuario}/rol, solo admin).
         $usuario->update($validated);
-        if (($validated['activo'] ?? true) === false) {
+        if ($desactiva) {
             $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
         }
         return $usuario->load('rol', 'sucursal');
@@ -136,9 +141,27 @@ class UsuarioController extends Controller
     public function destroy(Usuario $usuario)
     {
         // Soft-deactivation. No se elimina físicamente para preservar ventas/pedidos históricos.
+        $this->protegerUltimoAdmin($usuario);
         $usuario->update(['activo' => false]);
         $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
         return response()->noContent();
+    }
+
+    /**
+     * RS-05. No se puede desactivar al último administrador activo (422). Mismo criterio
+     * que cambiarRol(); se aplica a todos los caminos que desactivan (DELETE y PUT activo=false).
+     */
+    private function protegerUltimoAdmin(Usuario $usuario): void
+    {
+        if (! $usuario->activo || ! $usuario->esAdministrador()) {
+            return;
+        }
+
+        $otrosAdmins = Usuario::administradores()
+            ->where('activo', true)
+            ->where('id', '!=', $usuario->id)
+            ->count();
+        abort_if($otrosAdmins === 0, 422, 'No se puede desactivar: es el último admin activo');
     }
 
     /**
