@@ -62,5 +62,6 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(CatalogoSeeder::class);
+        $this->call(CuentasPruebaSeeder::class);
     }
 }
