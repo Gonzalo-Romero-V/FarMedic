@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Route;
 // ============== PÚBLICAS ==============
 Route::get('auth/login', fn () => response()->json(['message' => 'No autenticado'], 401))->name('login');
 Route::post('auth/login', [AuthController::class, 'login']);
-Route::post('auth/register/cliente', [AuthController::class, 'registerCliente']);
+Route::post('auth/register/cliente', [AuthController::class, 'registerCliente'])->middleware('throttle:registro');
 
 Route::get('roles', [RolController::class, 'index']);
 Route::get('farmacia', [FarmaciaController::class, 'show']);
