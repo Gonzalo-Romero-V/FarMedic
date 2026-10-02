@@ -15,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        // IP real del cliente tras el proxy del hosting (la usan los límites de RS-06 y RS-08).
+        // Sin TRUSTED_PROXIES no se confía en ningún proxy: $request->ip() es la IP de la conexión.
+        // Definirla ('*' o lista de IP/CIDR separadas por coma) solo en un entorno detrás de proxy.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

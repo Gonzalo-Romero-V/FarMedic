@@ -7,6 +7,7 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -17,6 +18,15 @@ use Laravel\Socialite\Facades\Socialite;
  */
 class AuthController extends Controller
 {
+    /** RS-06: intentos fallidos por correo+IP antes de bloquear, y duración del bloqueo. */
+    private const LOGIN_MAX_FALLOS = 5;
+    private const LOGIN_BLOQUEO_SEGUNDOS = 900;
+
+    /**
+     * RS-06. Tras 5 intentos fallidos consecutivos con la misma combinación correo+IP,
+     * el 6.º responde 429 (con Retry-After) durante 15 minutos. Un correo inexistente
+     * cuenta y responde igual que una contraseña errónea. El éxito reinicia el contador.
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -24,13 +34,25 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $clave = Str::lower(trim($credentials['email'])) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($clave, self::LOGIN_MAX_FALLOS)) {
+            $espera = RateLimiter::availableIn($clave);
+            return response()->json([
+                'message' => 'Demasiados intentos fallidos. Intenta de nuevo más tarde.',
+            ], 429)->header('Retry-After', $espera);
+        }
+
         $usuario = Usuario::with('rol', 'sucursal')->where('email', $credentials['email'])->first();
 
         if (! $usuario || ! Hash::check($credentials['password'], $usuario->password)) {
+            RateLimiter::hit($clave, self::LOGIN_BLOQUEO_SEGUNDOS);
             throw ValidationException::withMessages([
                 'email' => ['Credenciales inválidas'],
             ])->status(401);
         }
+
+        RateLimiter::clear($clave);
 
         if (! $usuario->activo) {
             return response()->json(['message' => 'Usuario inactivo'], 403);
