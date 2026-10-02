@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\BitacoraSeguridad;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +26,14 @@ class RoleMiddleware
         }
 
         if (! in_array($user->rol?->nombre, $roles, true)) {
+            BitacoraSeguridad::registrar(
+                BitacoraSeguridad::ACCESO_DENEGADO,
+                BitacoraSeguridad::DENEGADO,
+                $user,
+                $request,
+                null,
+                BitacoraSeguridad::rutaDe($request) . ' (rol insuficiente)'
+            );
             return response()->json([
                 'message' => 'No autorizado para esta acción',
                 'roles_requeridos' => $roles,

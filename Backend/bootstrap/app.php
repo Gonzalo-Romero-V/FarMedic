@@ -25,5 +25,18 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // RS-15: toda denegación 403 (policies y abort(403)) queda en la bitácora de seguridad.
+        // Devuelve null para que Laravel siga con su respuesta normal.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, \Illuminate\Http\Request $request) {
+            \App\Support\BitacoraSeguridad::registrar(
+                \App\Support\BitacoraSeguridad::ACCESO_DENEGADO,
+                \App\Support\BitacoraSeguridad::DENEGADO,
+                $request->user(),
+                $request,
+                null,
+                \App\Support\BitacoraSeguridad::rutaDe($request)
+            );
+
+            return null;
+        });
     })->create();

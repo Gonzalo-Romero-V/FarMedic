@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\BitacoraSeguridad;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,14 @@ class EnsureUserIsActive
         $user = $request->user();
 
         if ($user && ! $user->activo) {
+            BitacoraSeguridad::registrar(
+                BitacoraSeguridad::ACCESO_DENEGADO,
+                BitacoraSeguridad::DENEGADO,
+                $user,
+                $request,
+                null,
+                BitacoraSeguridad::rutaDe($request) . ' (usuario inactivo)'
+            );
             return response()->json(['message' => 'Usuario inactivo'], 401);
         }
 

@@ -7,6 +7,7 @@ use App\Http\Resources\ContactoEntregaResource;
 use App\Models\Rol;
 use App\Models\Usuario;
 use App\Rules\ContrasenaSegura;
+use App\Support\BitacoraSeguridad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -135,16 +136,21 @@ class UsuarioController extends Controller
         $usuario->update($validated);
         if ($desactiva) {
             $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
+            BitacoraSeguridad::registrar(BitacoraSeguridad::DESACTIVACION, BitacoraSeguridad::EXITOSO, $actor, $request, $usuario, 'por edición de usuario');
+        }
+        if (isset($validated['password'])) {
+            BitacoraSeguridad::registrar(BitacoraSeguridad::CAMBIO_CONTRASENA, BitacoraSeguridad::EXITOSO, $actor, $request, $usuario, 'restablecida por administrador');
         }
         return $usuario->load('rol', 'sucursal');
     }
 
-    public function destroy(Usuario $usuario)
+    public function destroy(Request $request, Usuario $usuario)
     {
         // Soft-deactivation. No se elimina físicamente para preservar ventas/pedidos históricos.
         $this->protegerUltimoAdmin($usuario);
         $usuario->update(['activo' => false]);
         $usuario->tokens()->delete(); // RS-04: desactivar revoca todos sus tokens
+        BitacoraSeguridad::registrar(BitacoraSeguridad::DESACTIVACION, BitacoraSeguridad::EXITOSO, $request->user(), $request, $usuario);
         return response()->noContent();
     }
 
@@ -206,6 +212,14 @@ class UsuarioController extends Controller
         }
 
         $usuario->update($updates);
+        BitacoraSeguridad::registrar(
+            BitacoraSeguridad::CAMBIO_ROL,
+            BitacoraSeguridad::EXITOSO,
+            $request->user(),
+            $request,
+            $usuario,
+            'rol: ' . ($rolActual?->nombre ?? 'ninguno') . ' → ' . $rolNuevo->nombre
+        );
         return $usuario->load('rol', 'sucursal');
     }
 }

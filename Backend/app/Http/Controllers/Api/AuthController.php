@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Rol;
 use App\Rules\ContrasenaSegura;
+use App\Support\BitacoraSeguridad;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -37,17 +38,19 @@ class AuthController extends Controller
 
         $clave = Str::lower(trim($credentials['email'])) . '|' . $request->ip();
 
+        $usuario = Usuario::with('rol', 'sucursal')->where('email', $credentials['email'])->first();
+
         if (RateLimiter::tooManyAttempts($clave, self::LOGIN_MAX_FALLOS)) {
             $espera = RateLimiter::availableIn($clave);
+            BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::BLOQUEADO, $usuario, $request, null, 'demasiados intentos fallidos');
             return response()->json([
                 'message' => 'Demasiados intentos fallidos. Intenta de nuevo más tarde.',
             ], 429)->header('Retry-After', $espera);
         }
 
-        $usuario = Usuario::with('rol', 'sucursal')->where('email', $credentials['email'])->first();
-
         if (! $usuario || ! Hash::check($credentials['password'], $usuario->password)) {
             RateLimiter::hit($clave, self::LOGIN_BLOQUEO_SEGUNDOS);
+            BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::FALLIDO, $usuario, $request, null, 'credenciales inválidas');
             throw ValidationException::withMessages([
                 'email' => ['Credenciales inválidas'],
             ])->status(401);
@@ -56,10 +59,12 @@ class AuthController extends Controller
         RateLimiter::clear($clave);
 
         if (! $usuario->activo) {
+            BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::FALLIDO, $usuario, $request, null, 'usuario inactivo');
             return response()->json(['message' => 'Usuario inactivo'], 403);
         }
 
         $token = $usuario->createToken('login-traditional')->plainTextToken;
+        BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::EXITOSO, $usuario, $request, null, 'correo y contraseña');
 
         return response()->json([
             'user' => $usuario,
@@ -104,6 +109,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        BitacoraSeguridad::registrar(BitacoraSeguridad::LOGOUT, BitacoraSeguridad::EXITOSO, $request->user(), $request);
         $request->user()->currentAccessToken()->delete();
         return response()->noContent();
     }
@@ -151,12 +157,14 @@ class AuthController extends Controller
 
         $user = $request->user();
         if (! Hash::check($validated['password_actual'], $user->password)) {
+            BitacoraSeguridad::registrar(BitacoraSeguridad::CAMBIO_CONTRASENA, BitacoraSeguridad::FALLIDO, $user, $request, null, 'contraseña actual incorrecta');
             throw ValidationException::withMessages([
                 'password_actual' => ['La contraseña actual no es correcta'],
             ]);
         }
 
         $user->update(['password' => Hash::make($validated['password_nueva'])]);
+        BitacoraSeguridad::registrar(BitacoraSeguridad::CAMBIO_CONTRASENA, BitacoraSeguridad::EXITOSO, $user, $request, null, 'cambio propio');
 
         $tokenActualId = $request->user()->currentAccessToken()->id;
         $user->tokens()->where('id', '!=', $tokenActualId)->delete();
@@ -183,6 +191,7 @@ class AuthController extends Controller
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Throwable $e) {
             \Log::error('Google OAuth user extraction failed: ' . $e->getMessage());
+            BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::FALLIDO, null, $request, null, 'google: respuesta no válida');
             return redirect(config('services.frontend.url') . '/auth/callback?error=oauth_failed');
         }
 
@@ -210,10 +219,12 @@ class AuthController extends Controller
             }
 
             if (! $usuario->activo) {
+                BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::FALLIDO, $usuario, $request, null, 'google: usuario inactivo');
                 return redirect(config('services.frontend.url') . '/auth/callback?error=usuario_inactivo');
             }
 
             $token = $usuario->createToken('google-oauth')->plainTextToken;
+            BitacoraSeguridad::registrar(BitacoraSeguridad::LOGIN, BitacoraSeguridad::EXITOSO, $usuario, $request, null, 'google');
 
             return redirect(config('services.frontend.url') . '/auth/callback?token=' . urlencode($token));
 
