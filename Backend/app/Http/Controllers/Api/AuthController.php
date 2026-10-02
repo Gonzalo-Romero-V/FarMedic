@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Rol;
+use App\Rules\ContrasenaSegura;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -75,7 +76,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:usuarios,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', new ContrasenaSegura],
             'telefono' => ['nullable', 'string', 'max:50'],
             'direccion' => ['nullable', 'string', 'max:255'],
         ]);
@@ -145,7 +146,7 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'password_actual' => ['required', 'string'],
-            'password_nueva' => ['required', 'string', 'min:8', 'different:password_actual'],
+            'password_nueva' => ['required', 'string', new ContrasenaSegura, 'different:password_actual'],
         ]);
 
         $user = $request->user();

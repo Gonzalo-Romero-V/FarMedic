@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ContactoEntregaResource;
 use App\Models\Rol;
 use App\Models\Usuario;
+use App\Rules\ContrasenaSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +40,7 @@ class UsuarioController extends Controller
             'sucursal_id' => ['nullable', 'exists:sucursales,id'],
             'nombre' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:usuarios,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', new ContrasenaSegura],
             'telefono' => ['nullable', 'string', 'max:50'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'google_oauth_id' => ['nullable', 'string', 'unique:usuarios,google_oauth_id'],
@@ -101,7 +102,7 @@ class UsuarioController extends Controller
         if ($actor->esAdministrador()) {
             $rules += [
                 'email' => ['sometimes', 'email', 'max:255', 'unique:usuarios,email,' . $usuario->id],
-                'password' => ['sometimes', 'string', 'min:8'],
+                'password' => ['sometimes', 'string', new ContrasenaSegura],
                 'sucursal_id' => ['sometimes', 'nullable', 'exists:sucursales,id'],
                 'activo' => ['sometimes', 'boolean'],
             ];
