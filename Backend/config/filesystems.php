@@ -33,7 +33,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false, // RS-14: sin la ruta storage/{path}; las recetas viven en este disco privado
             'throw' => false,
             'report' => false,
         ],

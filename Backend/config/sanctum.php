@@ -52,6 +52,10 @@ return [
 
     'expiration' => 480, // RS-11: 8 horas
 
+    // RS-14: FarMedic usa tokens Bearer, no autenticación por cookie de sesión; se desactiva la
+    // ruta /sanctum/csrf-cookie que el paquete registra y nadie usa.
+    'routes' => false,
+
     /*
     |--------------------------------------------------------------------------
     | Token Prefix
